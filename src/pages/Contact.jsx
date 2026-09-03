@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { AlertCircle, CheckCircle2, Send, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
@@ -6,13 +7,14 @@ import './Contact.css'
 
 function Contact() {
   const { t } = useTranslation()
+  const location = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    subject: location.state?.subject || '',
     message: ''
   })
   const [submitStatus, setSubmitStatus] = useState('idle')

@@ -1,6 +1,31 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
+
+
+class NormalUser(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Normal user'
+        verbose_name_plural = 'Normal users'
+
+
+class StaffUser(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Staff user'
+        verbose_name_plural = 'Staff users'
+
+
+class ExpertUser(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Expert user'
+        verbose_name_plural = 'Expert users'
 
 
 class Category(models.Model):
@@ -61,6 +86,13 @@ class Instrument(models.Model):
 
 
 class Expert(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='expert_profile',
+    )
     name = models.CharField(max_length=150)
     name_ne = models.CharField(max_length=150, blank=True, default='')
     expertise = models.CharField(max_length=150)
@@ -81,23 +113,6 @@ class Expert(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-
-class LearningContent(models.Model):
-    title = models.CharField(max_length=200)
-    title_ne = models.CharField(max_length=200, blank=True, default='')
-    content = models.TextField()
-    content_ne = models.TextField(blank=True, default='')
-    order = models.PositiveIntegerField(default=0)
-    is_published = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['order', 'title']
-
-    def __str__(self) -> str:
-        return self.title
 
 
 class Contact(models.Model):
@@ -233,4 +248,240 @@ class Branding(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Subscription(models.Model):
+    PLAN_FREE = 'FREE'
+    PLAN_PREMIUM = 'PREMIUM'
+    PLAN_CHOICES = [(PLAN_FREE, 'Free'), (PLAN_PREMIUM, 'Premium')]
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscription')
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_FREE)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_premium(self):
+        return self.is_active and self.plan == self.PLAN_PREMIUM
+
+    def can_access_course(self, course):
+        if course is None:
+            return False
+        if not getattr(course, 'is_premium', False):
+            return True
+        return self.is_premium()
+
+    def can_access_lesson(self, lesson):
+        if lesson is None:
+            return False
+        if not getattr(lesson, 'is_premium', False):
+            return True
+        return self.is_premium()
+
+    def __str__(self):
+        return f'{self.user.username} - {self.plan}'
+
+
+class Course(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    description = models.TextField(blank=True)
+    level = models.CharField(max_length=80, default='Beginner')
+    estimated_duration_minutes = models.PositiveIntegerField(default=0)
+    what_you_will_learn = models.TextField(blank=True, default='')
+    target_audience = models.TextField(blank=True, default='')
+    requirements = models.TextField(blank=True, default='')
+    instrument = models.ForeignKey('Instrument', on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
+    reference_expert = models.ForeignKey('Expert', on_delete=models.SET_NULL, null=True, blank=True, related_name='courses', help_text='The main expert/instructor for this course')
+    is_premium = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    is_visible = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'title']
+
+    def __str__(self):
+        return self.title
+
+
+class Lesson(models.Model):
+    ATTACHMENT_TYPES = [
+        ('none', 'No attachment'),
+        ('photo', 'Photo'),
+        ('video', 'Video'),
+        ('3d_model', '3D model'),
+    ]
+
+    title = models.CharField(max_length=220)
+    description = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='lessons/photos/', blank=True, null=True)
+    attachment_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPES, default='none')
+    attachment_photo = models.ImageField(upload_to='lessons/attachments/photos/', blank=True, null=True)
+    attachment_video = models.FileField(upload_to='lessons/attachments/videos/', blank=True, null=True)
+    attachment_3d_model = models.FileField(
+        upload_to='lessons/attachments/models/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['glb', 'gltf', 'bin'])],
+    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
+    order = models.PositiveIntegerField(default=0)
+    is_premium = models.BooleanField(default=False)
+    duration_minutes = models.PositiveIntegerField(default=0)
+    video_url = models.URLField(blank=True, default='')
+    content = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['course', 'order', 'title']
+
+    def __str__(self):
+        return f'{self.course.title} - {self.title}'
+
+
+class LessonAttachment(models.Model):
+    ATTACHMENT_TYPES = [
+        ('photo', 'Photo'),
+        ('video', 'Video'),
+        ('3d_model', '3D model'),
+    ]
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='attachments')
+    attachment_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPES)
+    photo = models.ImageField(upload_to='lessons/attachments/photos/', blank=True, null=True)
+    video_url = models.URLField(blank=True, default='')
+    model_3d = models.FileField(
+        upload_to='lessons/attachments/models/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['glb', 'gltf', 'bin'])],
+    )
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f'{self.lesson} - {self.get_attachment_type_display()}'
+
+
+class ContentAccess(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='content_access')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='access_records')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True, related_name='access_records')
+    granted = models.BooleanField(default=True)
+    access_type = models.CharField(max_length=30, choices=[('FREE', 'Free'), ('PREMIUM', 'Premium')], default='FREE')
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'course', 'lesson', 'access_type')]
+
+    def __str__(self):
+        target = self.course or self.lesson
+        return f'{self.user.username} -> {target}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorites')
+    content_type = models.CharField(max_length=40, choices=[('instrument', 'Instrument'), ('course', 'Course'), ('lesson', 'Lesson'), ('video', 'Video')], default='instrument')
+    object_id = models.PositiveIntegerField()
+    title = models.CharField(max_length=220, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'content_type', 'object_id')]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.content_type} - {self.object_id}'
+
+
+class RecentlyViewed(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recently_viewed')
+    content_type = models.CharField(max_length=40, default='instrument')
+    object_id = models.PositiveIntegerField()
+    title = models.CharField(max_length=220)
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-viewed_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.title}'
+
+
+class LearningProgress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='learning_progress')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='progress_records', null=True, blank=True)
+    lesson_title = models.CharField(max_length=220)
+    completion_percentage = models.PositiveSmallIntegerField(default=0)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.lesson_title}'
+
+
+class Quiz(models.Model):
+    title = models.CharField(max_length=220)
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='quizzes')
+    question = models.TextField()
+    choices = models.JSONField(default=list)
+    correct_answer = models.CharField(max_length=200)
+    explanation = models.TextField(blank=True, default='')
+    is_premium = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+
+class QuizAttempt(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='attempts')
+    user_answer = models.CharField(max_length=200)
+    score = models.PositiveSmallIntegerField(default=0)
+    total_questions = models.PositiveSmallIntegerField(default=1)
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-completed_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.quiz.title}'
+
+
+class Achievement(models.Model):
+    code = models.CharField(max_length=80, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=40, default='🏆')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='users')
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'achievement')]
+
+    def __str__(self):
+        return f'{self.user.username} - {self.achievement.title}'
 

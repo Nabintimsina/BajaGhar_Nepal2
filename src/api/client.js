@@ -67,6 +67,46 @@ const setAuthToken = (token) => {
 
 const clearAuthToken = () => localStorage.removeItem(AUTH_TOKEN_KEY)
 
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refresh_token')
+  
+  if (!refreshToken) {
+    clearAuthToken()
+    return null
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/auth/token/refresh/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshToken })
+    })
+
+    if (!response.ok) {
+      clearAuthToken()
+      localStorage.removeItem('refresh_token')
+      return null
+    }
+
+    const data = await response.json()
+    
+    if (data?.access) {
+      setAuthToken(data.access)
+      if (data?.refresh) {
+        localStorage.setItem('refresh_token', data.refresh)
+      }
+      return data.access
+    }
+
+    clearAuthToken()
+    return null
+  } catch {
+    clearAuthToken()
+    localStorage.removeItem('refresh_token')
+    return null
+  }
+}
+
 const extractErrorMessage = async (response) => {
   const fallbackMessage = response.statusText || 'Request failed'
 
@@ -122,7 +162,7 @@ const extractErrorMessage = async (response) => {
 const request = async (path, options = {}) => {
   const { params, body, headers, method = 'GET' } = options
   const url = buildUrl(path, params)
-  const authToken = getAuthToken()
+  let authToken = getAuthToken()
 
   const requestHeaders = {
     ...(body ? { 'Content-Type': 'application/json' } : {}),
@@ -130,11 +170,37 @@ const request = async (path, options = {}) => {
     ...headers
   }
 
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     method,
     headers: requestHeaders,
     body: body ? JSON.stringify(body) : undefined
   })
+
+  // If 401 Unauthorized, try to refresh token and retry
+  if (response.status === 401 && authToken) {
+    const newToken = await refreshAccessToken()
+    
+    if (newToken) {
+      // Retry request with new token
+      const retryHeaders = {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        Authorization: `Bearer ${newToken}`,
+        ...headers
+      }
+
+      response = await fetch(url, {
+        method,
+        headers: retryHeaders,
+        body: body ? JSON.stringify(body) : undefined
+      })
+    } else if (method === 'GET') {
+      // Public reads should still work when an old login token is left in storage.
+      response = await fetch(url, {
+        method,
+        headers: { ...headers },
+      })
+    }
+  }
 
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response))
@@ -155,4 +221,4 @@ const api = {
   delete: (path) => request(path, { method: 'DELETE' })
 }
 
-export { API_URL, api, getAuthToken, setAuthToken, clearAuthToken }
+export { API_URL, api, getAuthToken, setAuthToken, clearAuthToken, refreshAccessToken }

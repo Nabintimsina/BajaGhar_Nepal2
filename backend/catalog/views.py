@@ -1,29 +1,99 @@
 from datetime import timedelta
+import mimetypes
+import os
 
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.utils import timezone
-from rest_framework import status, viewsets
+from django.http import FileResponse, Http404, HttpResponse
+from rest_framework import permissions, status, viewsets
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
-from .models import Category, Instrument, Expert, LearningContent, Contact, Tutorial, TunerConfiguration, Branding
+from .models import (
+    Achievement,
+    Category,
+    ContentAccess,
+    Course,
+    Favorite,
+    Instrument,
+    Expert,
+    LearningProgress,
+    Lesson,
+    LessonAttachment,
+    Contact,
+    RecentlyViewed,
+    Subscription,
+    TunerConfiguration,
+    Branding,
+    UserAchievement,
+)
 from .serializers import (
+    AchievementSerializer,
     CategorySerializer,
-    InstrumentListSerializer,
-    InstrumentDetailSerializer,
+    CourseSerializer,
+    FavoriteSerializer,
+    ExpertPreviewSerializer,
     ExpertListSerializer,
     ExpertDetailSerializer,
-    LearningContentSerializer,
     ContactSerializer,
-    TutorialSerializer,
+    LessonSerializer,
+    LearningProgressSerializer,
+    RecentlyViewedSerializer,
+    SubscriptionSerializer,
     TunerConfigurationSerializer,
     BrandingSerializer,
+    UserAchievementSerializer,
+    UserSerializer,
     get_localized_value,
     get_requested_language,
 )
-from .permissions import IsAdminOrReadOnly
-from .filters import InstrumentFilter
+from .permissions import IsAdminOrReadOnly, IsExpertOrStaff
+
+
+def _serve_model_file(request, file_field, allowed):
+    if not file_field or not file_field.name:
+        raise Http404
+    if not os.path.isfile(file_field.path):
+        raise Http404
+    content_type = mimetypes.guess_type(file_field.name)[0] or 'application/octet-stream'
+    response = FileResponse(open(file_field.path, 'rb'), content_type=content_type)
+    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_field.name)}"'
+    return response
+
+
+class ProtectedLessonModelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        lesson = Lesson.objects.select_related('course').get(pk=pk)
+        subscription = getattr(request.user, 'subscription', None)
+        if (lesson.is_premium or lesson.course.is_premium) and not subscription_is_premium(subscription):
+            return HttpResponse(status=403)
+        return _serve_model_file(request, lesson.attachment_3d_model, True)
+
+
+class ProtectedLessonAttachmentModelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        attachment = LessonAttachment.objects.select_related('lesson__course').get(pk=pk)
+        subscription = getattr(request.user, 'subscription', None)
+        lesson = attachment.lesson
+        if (lesson.is_premium or lesson.course.is_premium) and not subscription_is_premium(subscription):
+            return HttpResponse(status=403)
+        return _serve_model_file(request, attachment.model_3d, True)
+
+
+def subscription_is_premium(subscription):
+    return bool(subscription and subscription.is_premium())
+
+
+def block_raw_model_media(request, file_path):
+    return HttpResponse(status=403)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -33,45 +103,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
 
-class InstrumentViewSet(viewsets.ModelViewSet):
-    queryset = Instrument.objects.select_related('category').prefetch_related('experts', 'tuner_configs')
-    permission_classes = [IsAdminOrReadOnly]
-    filterset_class = InstrumentFilter
-    search_fields = ['name', 'description', 'history', 'materials', 'cultural_significance']
-    ordering_fields = ['name', 'region', 'created_at']
-
-    def get_serializer_class(self):
-        # Use the detailed serializer for retrieve and write operations
-        if self.action in ('retrieve', 'create', 'update', 'partial_update'):
-            return InstrumentDetailSerializer
-        return InstrumentListSerializer
-
-    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
-    def tutorials(self, request, pk=None):
-        instrument = self.get_object()
-        tutorials = instrument.tutorials.all()
-        serializer = TutorialSerializer(tutorials, many=True, context={'request': request})
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
-    def tuner_config(self, request, pk=None):
-        instrument = self.get_object()
-        configs = instrument.tuner_configs.all().order_by('-is_default', 'tuning_name')
-        active = configs.filter(is_default=True).first() or configs.first()
-
-        if not active:
-            return Response({'active': None, 'options': []})
-
-        return Response(
-            {
-                'active': TunerConfigurationSerializer(active, context={'request': request}).data,
-                'options': TunerConfigurationSerializer(configs, many=True, context={'request': request}).data,
-            }
-        )
-
-
 class ExpertViewSet(viewsets.ModelViewSet):
-    queryset = Expert.objects.prefetch_related('instruments')
+    queryset = Expert.objects.all()
     permission_classes = [IsAdminOrReadOnly]
     search_fields = ['name', 'expertise']
 
@@ -79,14 +112,6 @@ class ExpertViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return ExpertDetailSerializer
         return ExpertListSerializer
-
-
-class LearningContentViewSet(viewsets.ModelViewSet):
-    queryset = LearningContent.objects.all()
-    serializer_class = LearningContentSerializer
-    permission_classes = [AllowAny]
-    ordering_fields = ['order', 'title']
-    http_method_names = ['get', 'head', 'options']
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -169,14 +194,6 @@ class ContactViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 
-class TutorialViewSet(viewsets.ModelViewSet):
-    queryset = Tutorial.objects.all()
-    serializer_class = TutorialSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    search_fields = ['title', 'instructor_name']
-    ordering_fields = ['created_at', 'instructor_name']
-
-
 class TunerConfigurationViewSet(viewsets.ModelViewSet):
     queryset = TunerConfiguration.objects.select_related('instrument').all()
     serializer_class = TunerConfigurationSerializer
@@ -215,6 +232,238 @@ class BrandingView(APIView):
         return Response(serializer.data)
 
 
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = (request.data.get('username') or '').strip()
+        email = (request.data.get('email') or '').strip()
+        password = request.data.get('password') or ''
+        first_name = (request.data.get('first_name') or '').strip()
+        last_name = (request.data.get('last_name') or '').strip()
+
+        if not username or not email or not password:
+            return Response({'detail': 'Username, email, and password are required.'}, status=400)
+
+        user_model = get_user_model()
+        if user_model.objects.filter(username__iexact=username).exists():
+            return Response({'detail': 'Username already exists.'}, status=400)
+        if user_model.objects.filter(email__iexact=email).exists():
+            return Response({'detail': 'Email already exists.'}, status=400)
+
+        user = user_model.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+        )
+        Subscription.objects.get_or_create(user=user, defaults={'plan': 'FREE'})
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'user': UserSerializer(user).data,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=201)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        subscription, _ = Subscription.objects.get_or_create(user=user, defaults={'plan': 'FREE'})
+        expert = getattr(user, 'expert_profile', None)
+        return Response({
+            'user': UserSerializer(user).data,
+            'subscription': SubscriptionSerializer(subscription).data,
+            'expert': ExpertPreviewSerializer(expert).data if expert else None,
+            'is_expert': expert is not None,
+            'is_authenticated': True,
+        })
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+        except Exception:
+            pass
+        return Response({'detail': 'Logged out successfully.'})
+
+
+class FavoriteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        favorites = Favorite.objects.filter(user=request.user)
+        return Response(FavoriteSerializer(favorites, many=True).data)
+
+    def post(self, request):
+        payload = request.data
+        title = payload.get('title') or payload.get('name') or ''
+        favorite, created = Favorite.objects.get_or_create(
+            user=request.user,
+            content_type=(payload.get('content_type') or 'instrument').lower(),
+            object_id=payload.get('object_id'),
+            defaults={'title': title},
+        )
+        if not created:
+            favorite.title = title or favorite.title
+            favorite.save(update_fields=['title'])
+        return Response(FavoriteSerializer(favorite).data, status=201 if created else 200)
+
+    def delete(self, request):
+        content_type = (request.query_params.get('content_type') or 'instrument').lower()
+        object_id = request.query_params.get('object_id')
+        deleted, _ = Favorite.objects.filter(user=request.user, content_type=content_type, object_id=object_id).delete()
+        return Response({'deleted': deleted > 0})
+
+
+class RecentlyViewedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        recent = RecentlyViewed.objects.filter(user=request.user)[:10]
+        return Response(RecentlyViewedSerializer(recent, many=True).data)
+
+    def post(self, request):
+        payload = request.data
+        RecentlyViewed.objects.filter(
+            user=request.user,
+            content_type=(payload.get('content_type') or 'instrument'),
+            object_id=payload.get('object_id'),
+        ).delete()
+        item = RecentlyViewed.objects.create(
+            user=request.user,
+            content_type=(payload.get('content_type') or 'instrument'),
+            object_id=payload.get('object_id'),
+            title=(payload.get('title') or 'Recently viewed item'),
+        )
+        return Response(RecentlyViewedSerializer(item).data, status=201)
+
+
+class LearningProgressView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        progress = LearningProgress.objects.filter(user=request.user)
+        return Response(LearningProgressSerializer(progress, many=True).data)
+
+    def post(self, request):
+        course_id = request.data.get('course')
+        progress, created = LearningProgress.objects.update_or_create(
+            user=request.user,
+            course_id=course_id,
+            lesson_title=request.data.get('lesson_title', 'Lesson'),
+            defaults={
+                'course_id': course_id,
+                'completion_percentage': int(request.data.get('completion_percentage', 0) or 0),
+                'is_completed': bool(request.data.get('is_completed', False)),
+                'completed_at': timezone.now() if request.data.get('is_completed') else None,
+            },
+        )
+        return Response(LearningProgressSerializer(progress).data, status=201 if created else 200)
+
+
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.select_related('instrument').prefetch_related('lessons').all()
+    serializer_class = CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.is_staff:
+            return self.queryset
+        if user.is_authenticated and hasattr(user, 'expert_profile'):
+            return self.queryset.filter(Q(is_visible=True) | Q(reference_expert__user=user)).distinct()
+        return self.queryset.filter(is_visible=True)
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [AllowAny()]
+        return [IsExpertOrStaff()]
+
+    def perform_create(self, serializer):
+        if self.request.user.is_staff:
+            serializer.save()
+        else:
+            serializer.save(reference_expert=self.request.user.expert_profile)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.select_related('course').prefetch_related('attachments').all()
+    serializer_class = LessonSerializer
+    permission_classes = [AllowAny]
+    http_method_names = ['get', 'head', 'options']
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(course__is_visible=True)
+        course_id = self.request.query_params.get('course')
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        return queryset
+
+
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        subscription, _ = Subscription.objects.get_or_create(user=user, defaults={'plan': 'FREE'})
+        favorites = Favorite.objects.filter(user=user)[:6]
+        recent = RecentlyViewed.objects.filter(user=user)[:6]
+        progress = LearningProgress.objects.filter(user=user)[:6]
+        achievements = UserAchievement.objects.filter(user=user).select_related('achievement')
+
+        recent_items = []
+        for item in recent:
+            recent_data = RecentlyViewedSerializer(item).data
+            if item.content_type == 'course':
+                recent_data['course_id'] = item.object_id
+            elif item.content_type == 'lesson':
+                recent_data['course_id'] = Lesson.objects.filter(
+                    id=item.object_id,
+                ).values_list('course_id', flat=True).first()
+            if recent_data.get('course_id'):
+                recent_items.append(recent_data)
+
+        favorite_course_ids = [item.object_id for item in favorites if item.content_type == 'course']
+        if favorite_course_ids:
+            recommended_courses = Course.objects.filter(is_visible=True).exclude(id__in=favorite_course_ids)[:3]
+        else:
+            recommended_courses = Course.objects.filter(is_visible=True)[:3]
+
+        return Response({
+            'user': UserSerializer(user).data,
+            'subscription': SubscriptionSerializer(subscription).data,
+            'favorites': FavoriteSerializer(favorites, many=True).data,
+            'recently_viewed': recent_items,
+            'progress': LearningProgressSerializer(progress, many=True).data,
+            'achievements': UserAchievementSerializer(achievements, many=True).data,
+            'recommended_courses': CourseSerializer(recommended_courses, many=True).data,
+        })
+
+
+class PremiumCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        subscription, _ = Subscription.objects.get_or_create(user=request.user, defaults={'plan': 'FREE'})
+        return Response({
+            'is_premium': subscription.is_premium(),
+            'plan': subscription.plan,
+            'message': 'Premium member access available.' if subscription.is_premium() else 'This lesson is available to BajaGhar Premium members.'
+        })
+
+
 class TunerSectionView(APIView):
     permission_classes = [AllowAny]
 
@@ -232,16 +481,13 @@ class TunerSectionView(APIView):
         for instrument in instruments:
             configs = instrument.tuner_configs.all().order_by('-is_default', 'tuning_name')
             active = configs.filter(is_default=True).first() or configs.first()
-
-            payload.append(
-                {
-                    'id': instrument.id,
-                    'name': get_localized_value(instrument, 'name', language),
-                    'region': get_localized_value(instrument, 'region', language),
-                    'category': get_localized_value(instrument.category, 'name', language),
-                    'tuner_config': TunerConfigurationSerializer(active, context={'request': request}).data if active else None,
-                    'tuner_configs': TunerConfigurationSerializer(configs, many=True, context={'request': request}).data,
-                }
-            )
+            payload.append({
+                'id': instrument.id,
+                'name': get_localized_value(instrument, 'name', language),
+                'region': get_localized_value(instrument, 'region', language),
+                'category': get_localized_value(instrument.category, 'name', language),
+                'tuner_config': TunerConfigurationSerializer(active, context={'request': request}).data if active else None,
+                'tuner_configs': TunerConfigurationSerializer(configs, many=True, context={'request': request}).data,
+            })
 
         return Response(payload)

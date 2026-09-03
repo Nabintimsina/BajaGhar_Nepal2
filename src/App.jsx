@@ -4,17 +4,20 @@ import { useTranslation } from 'react-i18next'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
-import Instruments from './pages/Instruments'
-import InstrumentDetail from './pages/InstrumentDetail'
 import Learn from './pages/Learn'
+import CourseDetail from './pages/CourseDetail'
+import LessonDetail from './pages/LessonDetail'
 import TunerLab from './pages/TunerLab'
 import Experts from './pages/Experts'
 import ExpertDetail from './pages/ExpertDetail'
-import About from './pages/About'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
+import CreateCourse from './pages/CreateCourse'
 import ErrorPage from './pages/ErrorPage'
 import { BrandingProvider } from './context/BrandingContext'
+import { AuthProvider } from './context/AuthContext'
 import './App.css'
 
 function App() {
@@ -30,25 +33,29 @@ function App() {
   return (
     <Router>
       <BrandingProvider>
-        <div className="app">
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/instruments" element={<Instruments />} />
-              <Route path="/instruments/:id" element={<InstrumentDetail />} />
-              <Route path="/learn" element={<Learn />} />
-              <Route path="/tuner" element={<TunerLab />} />
-              <Route path="/experts" element={<Experts />} />
-              <Route path="/experts/:id" element={<ExpertDetail />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <div className="app">
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/learn" element={<Learn />} />
+                <Route path="/learn/courses/:id" element={<CourseDetail />} />
+                <Route path="/learn/courses/:courseId/lessons/:lessonId" element={<LessonDetail />} />
+                <Route path="/tuner" element={<TunerLab />} />
+                <Route path="/experts" element={<Experts />} />
+                <Route path="/experts/:id" element={<ExpertDetail />} />
+                                <Route path="/experts/:id/courses/new" element={<CreateCourse />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<ErrorPage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </BrandingProvider>
     </Router>
   )

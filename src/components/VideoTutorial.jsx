@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { API_URL } from '../api/client'
 import './VideoTutorial.css'
 
-function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false, instructorProfiles = {} }) {
+function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false, videoOnly = false, instructorProfiles = {} }) {
   const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [selectedTutorial, setSelectedTutorial] = useState(tutorials.length > 0 ? tutorials[0] : null)
@@ -61,7 +61,8 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
   const getEmbedUrl = (url) => {
     const videoId = extractVideoId(url)
     if (videoId && isYouTubeUrl(url)) {
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`
+      const origin = encodeURIComponent(window.location.origin)
+      return `https://www.youtube-nocookie.com/embed/${videoId}?controls=1&rel=0&playsinline=1&fs=0&disablekb=1&iv_load_policy=3&origin=${origin}`
     }
     return resolveVideoUrl(url)
   }
@@ -83,12 +84,23 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
         <div className="video-frame">
           {selectedTutorial && selectedTutorial.video_url ? (
             isYouTubeUrl(selectedTutorial.video_url) ? (
-              <iframe
-                src={getEmbedUrl(selectedTutorial.video_url)}
-                title={selectedTutorial.title}
-                frameBorder="0"
-                allowFullScreen
-              />
+              <div
+                className="youtube-embed-wrap"
+                onContextMenu={(event) => event.preventDefault()}
+                onDragStart={(event) => event.preventDefault()}
+              >
+                <iframe
+                  src={getEmbedUrl(selectedTutorial.video_url)}
+                  title={selectedTutorial.title}
+                  frameBorder="0"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
+                  allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                />
+                <span className="youtube-player-shield youtube-player-shield-title" aria-hidden="true" contentEditable="false" draggable="false" />
+                <span className="youtube-player-shield youtube-player-shield-left" aria-hidden="true" contentEditable="false" draggable="false" />
+                <span className="youtube-player-shield youtube-player-shield-right" aria-hidden="true" contentEditable="false" draggable="false" />
+              </div>
             ) : isDirectVideoFile(selectedTutorial.video_url) ? (
               <>
                 <video
@@ -136,7 +148,7 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
         </div>
       </div>
 
-      {selectedTutorial && (
+      {!videoOnly && selectedTutorial && (
         <div className="tutorial-info">
           <h3>{selectedTutorial.title}</h3>
           <div className="tutorial-meta">
@@ -162,7 +174,7 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
         </div>
       )}
 
-      <div className="tutorials-list">
+      {!videoOnly && <div className="tutorials-list">
         <h4>{compact ? t('learn.tutorialList') : t('learn.moreTutorials')}</h4>
         <div className="tutorial-cards">
           {tutorials.map((tutorial) => (
@@ -192,7 +204,7 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
             </button>
           ))}
         </div>
-      </div>
+      </div>}
     </>
   )
 

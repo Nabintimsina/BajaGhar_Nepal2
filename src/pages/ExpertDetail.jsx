@@ -3,12 +3,14 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Mail, Award } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 import './ExpertDetail.css'
 
 function ExpertDetail() {
   const { t, i18n } = useTranslation()
   const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase().startsWith('ne') ? 'ne' : 'en'
   const { id } = useParams()
+  const { expert: loggedInExpert } = useAuth()
   const [expert, setExpert] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -102,6 +104,11 @@ function ExpertDetail() {
                 <Mail size={18} />
                 {t('expertDetail.contact')}
               </a>
+              {loggedInExpert?.id === expert.id && (
+                <Link to={`/experts/${expert.id}/courses/new`} className="btn btn-secondary expert-course-action">
+                  Create a course
+                </Link>
+              )}
             </div>
           </div>
         </div>

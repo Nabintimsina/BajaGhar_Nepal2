@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { Bounds, Center, Environment, Html, OrbitControls, useGLTF } from '@react-three/drei'
 import { Maximize, Minimize, RotateCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { getAuthToken } from '../api/client'
 import './Viewer3D.css'
 
 // Error Boundary Component
@@ -109,19 +110,19 @@ function Viewer3D({ modelSrc, title, showBrightnessControl = false }) {
   const [isLoadingProtectedModel, setIsLoadingProtectedModel] = useState(false)
   const rotationY = useMemo(() => (rotation * Math.PI) / 180, [rotation])
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Viewer3D mounted with modelSrc:', modelSrc)
-    console.log('Model source type:', typeof modelSrc)
-    console.log('Is valid model:', isValidModel)
-  }, [modelSrc])
-
   // Validate model source
   const isValidModel = useMemo(() => {
     if (!modelSrc) return false
     const validExtensions = ['.glb', '.gltf', '.bin']
     const lowerSrc = modelSrc.toLowerCase()
-    return validExtensions.some(ext => lowerSrc.endsWith(ext))
+    if (lowerSrc.includes('/protected-3d/')) return true
+
+    try {
+      const pathname = new URL(modelSrc, window.location.origin).pathname.toLowerCase()
+      return validExtensions.some(ext => pathname.endsWith(ext))
+    } catch {
+      return false
+    }
   }, [modelSrc])
 
   useEffect(() => {
@@ -140,6 +141,7 @@ function Viewer3D({ modelSrc, title, showBrightnessControl = false }) {
       try {
         const response = await fetch(modelSrc, {
           credentials: 'include',
+          headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
         })
         if (!response.ok) {
           throw new Error(`Failed to load model: ${response.status}`)

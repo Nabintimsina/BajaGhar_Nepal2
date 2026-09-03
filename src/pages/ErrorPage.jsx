@@ -26,9 +26,9 @@ function ErrorPage() {
                 <Home size={18} />
                 {t('error.goHome')}
               </Link>
-              <Link to="/instruments" className="btn error-secondary-btn">
+              <Link to="/learn" className="btn error-secondary-btn">
                 <Search size={18} />
-                {t('instruments.title')}
+                {t('nav.learn')}
               </Link>
               <button type="button" className="btn error-tertiary-btn" onClick={() => window.history.back()}>
                 <ArrowLeft size={18} />

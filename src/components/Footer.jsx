@@ -27,7 +27,6 @@ function Footer() {
           <h3>{t('footer.explore')}</h3>
           <ul className="footer-links">
             <li><Link to="/">{t('nav.home')}</Link></li>
-            <li><Link to="/instruments">{t('nav.instruments')}</Link></li>
             <li><Link to="/learn">{t('nav.learn')}</Link></li>
             <li><Link to="/experts">{t('nav.experts')}</Link></li>
           </ul>
@@ -36,8 +35,6 @@ function Footer() {
         <div className="footer-section">
           <h3>{t('footer.connect')}</h3>
           <ul className="footer-links">
-            <li><Link to="/about">{t('footer.aboutProject')}</Link></li>
-            <li><Link to="/about#development-team">{t('footer.aboutDevelopers')}</Link></li>
             <li><Link to="/contact">{t('footer.contact')}</Link></li>
           </ul>
           <div className="footer-email">

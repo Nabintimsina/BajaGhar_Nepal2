@@ -1,0 +1,308 @@
+.lesson-detail-page {
+  min-height: 100vh;
+}
+
+.lesson-state {
+  padding: var(--spacing-2xl) var(--spacing-md);
+  text-align: center;
+}
+
+.lesson-state p {
+  margin-bottom: var(--spacing-lg);
+}
+
+.lesson-course-bar {
+  background: var(--primary-maroon);
+  border-bottom: 1px solid var(--overlay-white);
+}
+
+.lesson-course-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-height: 64px;
+  color: var(--text-inverse-soft);
+  font-size: var(--fs-body-sm);
+}
+
+.lesson-course-bar-inner > div {
+  min-width: 0;
+}
+
+.lesson-course-bar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-light);
+  font-weight: var(--fw-semibold);
+}
+
+.lesson-course-bar a:hover {
+  color: var(--accent-gold);
+}
+
+.lesson-course-bar p {
+  max-width: 720px;
+  margin: 0.35rem 0 0;
+  color: var(--text-inverse-soft);
+  font-size: var(--fs-caption);
+}
+
+.lesson-main {
+  padding-top: var(--spacing-2xl);
+  padding-bottom: var(--spacing-2xl);
+}
+
+.lesson-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: calc(var(--spacing-xl) + var(--spacing-sm));
+  align-items: start;
+}
+
+.lesson-content-panel,
+.lesson-side-panel {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--secondary-light);
+  box-shadow: 0 2px 8px var(--shadow-base);
+}
+
+.lesson-content-panel {
+  padding: calc(var(--spacing-xl) + var(--spacing-sm));
+}
+
+.lesson-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-maroon);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-bold);
+}
+
+.lesson-kicker span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.lesson-content-panel h1 {
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-maroon);
+  font-size: clamp(2.1rem, 4vw, 3.2rem);
+}
+
+.lesson-description {
+  max-width: 720px;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: var(--fs-body-lg);
+  line-height: 1.75;
+}
+
+.lesson-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0 0 var(--spacing-xl);
+  border-radius: var(--radius-md);
+  object-fit: contain;
+  box-shadow: 0 4px 14px var(--shadow-base);
+}
+
+.lesson-attachment-model {
+  margin-bottom: var(--spacing-xl);
+}
+
+.lesson-text-content {
+  max-width: 760px;
+  color: var(--text-secondary);
+}
+
+.lesson-text-content h3 {
+  margin: var(--spacing-xl) 0 var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 2px solid var(--accent-gold);
+  color: var(--primary-maroon);
+  font-size: 1.35rem;
+}
+
+.lesson-text-content h3:first-child {
+  margin-top: 0;
+}
+
+.lesson-text-content p,
+.lesson-text-content li {
+  line-height: 1.85;
+}
+
+.lesson-text-content p {
+  margin-bottom: var(--spacing-md);
+}
+
+.lesson-text-content ul {
+  margin: 0 0 var(--spacing-md);
+  padding-left: 1.3rem;
+}
+
+.lesson-text-space {
+  height: 0.35rem;
+}
+
+.lesson-video-section {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-soft);
+}
+
+.lesson-video-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-maroon);
+  font-size: 1.35rem;
+}
+
+.lesson-completion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-soft);
+}
+
+.lesson-completion p {
+  margin: 0;
+  color: var(--accent-bronze);
+  font-size: var(--fs-body-sm);
+}
+
+.lesson-locked,
+.lesson-empty {
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--secondary-beige);
+  text-align: center;
+}
+
+.lesson-locked svg,
+.lesson-empty svg {
+  color: var(--accent-bronze);
+}
+
+.lesson-locked h2 {
+  margin: var(--spacing-sm) 0;
+  color: var(--primary-maroon);
+}
+
+.lesson-locked p,
+.lesson-empty p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.lesson-side-panel {
+  position: sticky;
+  top: 90px;
+  padding: var(--spacing-lg);
+}
+
+.lesson-side-panel h2 {
+  margin: var(--spacing-sm) 0;
+  color: var(--primary-maroon);
+  font-size: 1.35rem;
+}
+
+.lesson-side-panel p {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
+  font-size: var(--fs-body-sm);
+}
+
+.lesson-progress-track {
+  height: 8px;
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--secondary-beige);
+}
+
+.lesson-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-gold);
+}
+
+.lesson-side-panel .btn {
+  width: 100%;
+}
+
+.lesson-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.lesson-navigation a,
+.lesson-navigation button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--secondary-light);
+  color: var(--primary-maroon);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.lesson-navigation a:hover,
+.lesson-navigation button:hover {
+  border-color: var(--accent-gold);
+  background: var(--secondary-beige);
+}
+
+@media (max-width: 900px) {
+  .lesson-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-side-panel {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .lesson-course-bar-inner,
+  .lesson-navigation {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lesson-course-bar-inner > span {
+    padding-left: 1.5rem;
+  }
+
+  .lesson-content-panel {
+    padding: var(--spacing-md);
+  }
+
+  .lesson-navigation a,
+  .lesson-navigation button {
+    width: 100%;
+    justify-content: center;
+  }
+}
