@@ -13,6 +13,7 @@
 .course-filter button.active { color: var(--primary-maroon); border-color: var(--accent-gold); }
 .course-studio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg); }
 .studio-course-card { display: flex; flex-direction: column; min-height: 250px; padding: var(--spacing-lg); border: 1px solid var(--border-soft); border-top: 4px solid var(--accent-gold); border-radius: var(--radius-lg); background: var(--secondary-light); box-shadow: var(--shadow-card); transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
+.studio-course-image { width: calc(100% + 3rem); height: 140px; margin: calc(-1.5rem - 4px) -1.5rem 1rem; object-fit: cover; background: var(--secondary-beige); }
 .studio-course-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .studio-course-card-top, .studio-course-meta { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
 .studio-course-card h2 { margin: 1rem 0 .45rem; color: var(--primary-maroon); font-size: 1.3rem; }

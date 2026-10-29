@@ -1,6 +1,9 @@
 .expert-card {
+  position: relative;
   text-align: center;
   padding: var(--spacing-lg);
+  border-top: 3px solid var(--accent-gold);
+  background: linear-gradient(180deg, var(--secondary-light), var(--surface-card-muted));
 }
 
 .expert-card-header {
@@ -20,6 +23,13 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  box-shadow: 0 0 0 8px var(--tint-gold-soft);
+  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+}
+
+.expert-card:hover .expert-photo {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 10px var(--tint-gold-medium);
 }
 
 .expert-photo img {

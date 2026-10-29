@@ -83,16 +83,7 @@
   align-items: start;
 }
 
-.lesson-content-panel,
-.lesson-side-panel {
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  background: var(--secondary-light);
-  box-shadow: 0 8px 24px var(--shadow-soft);
-}
-
 .lesson-content-panel {
-  padding: clamp(1.25rem, 4vw, 3rem);
 }
 
 .lesson-kicker {
@@ -281,8 +272,9 @@
 .lesson-side-panel {
   position: sticky;
   top: 90px;
-  padding: clamp(1.1rem, 3vw, 1.5rem);
-  border-top: 4px solid var(--accent-gold);
+  padding: .5rem 0 .5rem var(--spacing-lg);
+  border-left: 2px solid var(--accent-gold);
+  background: transparent;
 }
 
 .lesson-side-panel h2 {
@@ -358,6 +350,9 @@
   .lesson-side-panel {
     position: static;
     order: -1;
+    padding: 0 0 var(--spacing-md);
+    border-left: 0;
+    border-bottom: 1px solid var(--border-soft);
   }
 }
 

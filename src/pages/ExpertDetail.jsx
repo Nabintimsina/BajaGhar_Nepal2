@@ -74,17 +74,13 @@ function ExpertDetail() {
 
   return (
     <div className="expert-detail-page">
-      {/* Back Button */}
-      <div className="container">
-        <Link to="/experts" className="back-link">
-          <ArrowLeft size={20} />
-          {t('expertDetail.backToExperts')}
-        </Link>
-      </div>
-
       {/* Expert Profile Header */}
       <div className="expert-profile-header">
         <div className="container">
+          <Link to="/experts" className="back-link">
+            <ArrowLeft size={20} />
+            {t('expertDetail.backToExperts')}
+          </Link>
           <div className="profile-content">
             <div className="profile-photo-large">
               {expert.photo ? (

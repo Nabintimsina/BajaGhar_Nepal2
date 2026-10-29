@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
     Achievement,
-    Category,
     Course,
     Favorite,
     Expert,
@@ -67,14 +66,6 @@ class LanguageAwareModelSerializer(serializers.ModelSerializer):
                 data[field_name] = localized_value
 
         return data
-
-
-class CategorySerializer(LanguageAwareModelSerializer):
-    localized_fields = ('name', 'description')
-
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'slug', 'description']
 
 
 class ExpertPreviewSerializer(LanguageAwareModelSerializer):
@@ -183,25 +174,24 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField(source='lessons.count', read_only=True)
+    remove_photo = serializers.BooleanField(write_only=True, required=False, default=False)
     reference_expert = ExpertPreviewSerializer(read_only=True)
-    instrument_name = serializers.CharField(source='instrument.name', read_only=True, allow_null=True)
-    instrument_image = serializers.ImageField(source='instrument.primary_image', read_only=True, allow_null=True)
-    instrument_is_featured = serializers.BooleanField(source='instrument.is_featured', read_only=True, allow_null=True)
+    photo = serializers.ImageField(allow_null=True, required=False)
 
     class Meta:
         model = Course
         fields = [
-            'id', 'title', 'slug', 'description', 'level',
+            'id', 'title', 'slug', 'description', 'photo', 'level',
             'estimated_duration_minutes', 'what_you_will_learn',
-            'target_audience', 'requirements', 'instrument',
-            'instrument_name', 'instrument_image', 'instrument_is_featured',
-            'reference_expert', 'is_premium', 'order', 'is_visible', 'lessons_count', 'updated_at',
+            'target_audience', 'requirements',
+            'reference_expert', 'is_premium', 'is_featured', 'order', 'is_visible', 'lessons_count', 'updated_at', 'remove_photo',
         ]
         read_only_fields = ['updated_at']
 
     def validate(self, attrs):
         request = self.context.get('request')
         if request and request.method in ('POST', 'PUT', 'PATCH') and not request.user.is_staff:
+            attrs.pop('is_featured', None)
             expert = getattr(request.user, 'expert_profile', None)
             if expert is None:
                 raise serializers.ValidationError('Only linked experts can manage courses.')
@@ -210,6 +200,17 @@ class CourseSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('You can only assign courses to yourself.')
             attrs['reference_expert'] = expert
         return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('remove_photo', False)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        remove_photo = validated_data.pop('remove_photo', False)
+        if remove_photo and 'photo' not in validated_data and instance.photo:
+            instance.photo.delete(save=False)
+            instance.photo = None
+        return super().update(instance, validated_data)
 
 
 class TunerConfigurationSerializer(LanguageAwareModelSerializer):

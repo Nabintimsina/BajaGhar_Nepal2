@@ -129,7 +129,7 @@ function CourseDetail() {
           <Link to="/learn" className="course-back-link"><ArrowLeft size={18} /> Back to Learn</Link>
           <div className="course-hero-grid">
             <div className="course-hero-copy">
-              <span className="eyebrow">{course.instrument_name ? `${course.instrument_name} course` : 'BajaGhar course'}</span>
+              <span className="eyebrow">BajaGhar course</span>
               <h1>{course.title}</h1>
               <p>{course.description || 'A guided course in Nepali musical heritage.'}</p>
               <div className="course-facts">
@@ -158,7 +158,7 @@ function CourseDetail() {
                 <span style={{ width: `${progressPercentage}%` }} />
               </div>
               <p>{completedCount}/{lessons.length} lessons completed</p>
-              {course.instrument_image && <img src={course.instrument_image} alt={course.instrument_name || course.title} />}
+              {course.photo && <img src={course.photo} alt={course.title} />}
             </div>
           </div>
         </div>

@@ -98,6 +98,7 @@ function VideoTutorial({ tutorials = [], defaultExpanded = true, compact = false
                   allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
                 />
                 <span className="youtube-player-shield youtube-player-shield-title" aria-hidden="true" contentEditable="false" draggable="false" />
+                <span className="youtube-player-shield youtube-player-shield-settings" aria-hidden="true" contentEditable="false" draggable="false" />
                 <span className="youtube-player-shield youtube-player-shield-left" aria-hidden="true" contentEditable="false" draggable="false" />
                 <span className="youtube-player-shield youtube-player-shield-right" aria-hidden="true" contentEditable="false" draggable="false" />
               </div>

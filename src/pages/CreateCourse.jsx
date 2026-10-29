@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Edit3, Eye, EyeOff, GripVertical, Plus, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Edit3, Eye, EyeOff, FileImage, GripVertical, Plus, Save, Trash2 } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -20,6 +20,9 @@ function CreateCourse() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [draggedLessonId, setDraggedLessonId] = useState(null)
+  const [photoFile, setPhotoFile] = useState(null)
+  const [existingPhoto, setExistingPhoto] = useState('')
+  const [removePhoto, setRemovePhoto] = useState(false)
 
   useEffect(() => {
     if (!location.state?.success) return
@@ -34,6 +37,7 @@ function CreateCourse() {
         const [courseData, lessonResponse] = await Promise.all([api.get(`courses/${id}/`, { mine: '1' }), api.get('lessons/', { course: id })])
         setCourse(courseData)
         setForm({ title: courseData.title || '', description: courseData.description || '', level: courseData.level || 'Beginner', estimated_duration_minutes: courseData.estimated_duration_minutes || 0, what_you_will_learn: courseData.what_you_will_learn || '', target_audience: courseData.target_audience || '', requirements: courseData.requirements || '', is_premium: Boolean(courseData.is_premium), is_visible: Boolean(courseData.is_visible) })
+        setExistingPhoto(courseData.photo || '')
         setLessons(Array.isArray(lessonResponse) ? lessonResponse : lessonResponse?.results || [])
       } catch (err) {
         setError(err.message || 'Unable to load this course.')
@@ -55,9 +59,15 @@ function CreateCourse() {
     setError('')
     setSuccess('')
     try {
-      const payload = { ...form, estimated_duration_minutes: Number(form.estimated_duration_minutes) || 0 }
+      const payload = new FormData()
+      Object.entries({ ...form, estimated_duration_minutes: Number(form.estimated_duration_minutes) || 0 }).forEach(([key, value]) => payload.append(key, value))
+      payload.append('remove_photo', String(removePhoto && !photoFile))
+      if (photoFile) payload.append('photo', photoFile)
       const savedCourse = id ? await api.patch(`courses/${id}/`, payload) : await api.post('courses/', payload)
       setCourse(savedCourse)
+      setExistingPhoto(savedCourse.photo || '')
+      setPhotoFile(null)
+      setRemovePhoto(false)
       if (!id) navigate(`/expert-dashboard/courses/${savedCourse.id}/edit`, { replace: true, state: { success: 'Course created successfully.' } })
       else setSuccess('Course details saved successfully.')
     } catch (err) {
@@ -127,6 +137,7 @@ function CreateCourse() {
         <div className="course-section-heading"><div><h2>Course details</h2>{course?.updated_at && <small className="editor-updated-at">{formatUpdatedAt(course.updated_at)}</small>}</div>{course && <div className="course-status-actions"><span className={`course-status-label ${course.is_visible ? 'published' : 'draft'}`}>{course.is_visible ? <><Eye size={14} /> Published</> : <><EyeOff size={14} /> Draft</>}</span><button type="button" className="btn btn-secondary btn-compact" onClick={togglePublish}>{course.is_visible ? 'Unpublish' : 'Publish'}</button></div>}</div>
         <form className="course-editor-form" onSubmit={submit}>
           <label>Course title<input name="title" value={form.title} onChange={updateField} required maxLength={200} /></label><label>Description<textarea name="description" value={form.description} onChange={updateField} rows="4" required /></label>
+          <div className="course-photo-field"><span className="course-photo-label"><FileImage size={17} /> Course photo</span>{(photoFile || existingPhoto) && <img className="course-photo-preview" src={photoFile ? URL.createObjectURL(photoFile) : existingPhoto} alt="Course preview" />}<input type="file" accept="image/*" onChange={(event) => { setPhotoFile(event.target.files?.[0] || null); setRemovePhoto(false) }} />{existingPhoto && !photoFile && <label className="course-photo-remove"><input type="checkbox" checked={removePhoto} onChange={(event) => setRemovePhoto(event.target.checked)} /> Remove current photo</label>}</div>
           <div className="course-editor-grid"><label>Level<select name="level" value={form.level} onChange={updateField}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label><label>Estimated minutes<input name="estimated_duration_minutes" type="number" min="0" value={form.estimated_duration_minutes} onChange={updateField} /></label></div>
           <label>What students will learn<textarea name="what_you_will_learn" value={form.what_you_will_learn} onChange={updateField} rows="4" /></label><label>Target audience<textarea name="target_audience" value={form.target_audience} onChange={updateField} rows="3" /></label><label>Requirements<textarea name="requirements" value={form.requirements} onChange={updateField} rows="3" /></label>
           <div className="course-editor-options"><label className="course-editor-check"><input name="is_premium" type="checkbox" checked={form.is_premium} onChange={updateField} /> Premium course</label><label className="course-editor-check"><input name="is_visible" type="checkbox" checked={form.is_visible} onChange={updateField} /> Publish course</label></div>

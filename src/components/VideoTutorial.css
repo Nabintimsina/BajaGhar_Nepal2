@@ -91,6 +91,13 @@
   height: 58px;
 }
 
+.youtube-player-shield-settings {
+  top: 0;
+  right: 0;
+  width: 58px;
+  height: 58px;
+}
+
 .youtube-player-shield-left {
   bottom: 0;
   left: 0;

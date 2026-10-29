@@ -78,7 +78,7 @@
 .course-hero-copy h1 {
   margin: 0.75rem 0 var(--spacing-md);
   color: var(--text-light);
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(2.2rem, 4.3vw, 3.8rem);
   line-height: 1.12;
 }
 
@@ -86,7 +86,7 @@
   max-width: 690px;
   margin-bottom: var(--spacing-lg);
   color: var(--text-inverse-soft);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   line-height: 1.8;
 }
 
@@ -550,7 +550,7 @@
   }
 
   .course-hero-copy h1 {
-    font-size: 2rem;
+    font-size: 2.15rem;
   }
 
   .course-facts {

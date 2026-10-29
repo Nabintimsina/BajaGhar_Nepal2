@@ -1,7 +1,6 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path
 from .views import (
-    CategoryViewSet,
     CourseViewSet,
     DashboardView,
     FavoriteView,
@@ -24,7 +23,6 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('categories', CategoryViewSet)
 router.register('experts', ExpertViewSet)
 router.register('contact', ContactViewSet)
 router.register('courses', CourseViewSet)

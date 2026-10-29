@@ -241,11 +241,52 @@ a:hover {
 }
 
 .page-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--primary-maroon) 0%, var(--primary-deep-red) 100%);
   color: var(--text-light);
   padding: clamp(3rem, 8vw, 5rem) 0;
   text-align: center;
   border-bottom: 1px solid var(--overlay-white);
+}
+
+.page-header::before,
+.page-header::after {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.page-header::before {
+  width: 22rem;
+  height: 22rem;
+  left: -7rem;
+  top: -13rem;
+  box-shadow: 0 0 0 1.5rem rgba(212, 175, 55, 0.06), 0 0 0 3rem rgba(212, 175, 55, 0.035);
+  animation: header-orbit 16s linear infinite;
+}
+
+.page-header::after {
+  width: 15rem;
+  height: 15rem;
+  right: -4rem;
+  bottom: -10rem;
+  border-color: rgba(255, 255, 255, 0.22);
+  animation: header-orbit 12s linear infinite reverse;
+}
+
+.page-header .container {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes header-orbit {
+  from { transform: rotate(0deg) translateX(4px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(4px) rotate(-360deg); }
 }
 
 .page-header h1 {
@@ -258,6 +299,20 @@ a:hover {
   font-size: var(--fs-body-lg);
   max-width: 720px;
   margin: 0 auto;
+}
+
+.page-header h1,
+.page-header p {
+  animation: header-rise 0.65s ease both;
+}
+
+.page-header p {
+  animation-delay: 0.1s;
+}
+
+@keyframes header-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .eyebrow {
@@ -481,6 +536,13 @@ button:disabled,
   }
 }
 
+@media (max-width: 640px) {
+  .container,
+  .container-wide {
+    padding-bottom: 1rem;
+  }
+}
+
 @media (max-width: 480px) {
   .grid-2,
   .grid-3,
@@ -500,6 +562,7 @@ button:disabled,
   .container-wide {
     padding-left: 1rem;
     padding-right: 1rem;
+    padding-bottom: 1rem;
   }
 
   .btn {

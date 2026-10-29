@@ -26,7 +26,7 @@ function Home() {
       try {
         const courseResponse = await api.get('courses/', { lang: activeLanguage })
         const courses = Array.isArray(courseResponse) ? courseResponse : courseResponse?.results || []
-        const items = courses.filter((course) => course.instrument_is_featured)
+        const items = courses.filter((course) => course.is_featured && course.is_visible)
 
         if (isMounted) {
           setFeaturedCourses(items.slice(0, 4))
@@ -55,17 +55,24 @@ function Home() {
       <section className="hero-section">
         <div className="hero-overlay" />
         <div className="hero-content container">
-          {/* <p className="section-label">Digital Museum + Learning Platform</p> */}
-          <h1 className="hero-title">{t('home.title')}</h1>
-          <p className="hero-subtitle">{t('home.subtitle')}</p>
-          <div className="hero-buttons">
-            <Link to="/learn" className="btn btn-primary btn-large">
-              Learn instruments
-              <ArrowRight size={18} />
-            </Link>
-            <a href="#about-bajaghar" className="btn btn-outline btn-large">
-              Learn more
-            </a>
+          <div className="hero-copy">
+            <h1 className="hero-title">{t('home.title')}</h1>
+            <p className="hero-subtitle">{t('home.subtitle')}</p>
+            <div className="hero-buttons">
+              <Link to="/learn" className="btn btn-primary btn-large">
+                Learn instruments
+                <ArrowRight size={18} />
+              </Link>
+              <a href="#about-bajaghar" className="btn btn-outline btn-large">
+                Learn more
+              </a>
+            </div>
+          </div>
+          <div className="hero-art" aria-hidden="true">
+            <div className="hero-art-ring" />
+            <span className="hero-art-note note-top">♪</span>
+            <img src="/images/sarangi.png" alt="" />
+            <span className="hero-art-note note-bottom">♫</span>
           </div>
         </div>
       </section>
@@ -92,11 +99,11 @@ function Home() {
             <div className="featured-grid">
               {featuredCourses.map((course) => (
                 <article className="course-card" key={course.id}>
-                  {course.instrument_image && <img src={course.instrument_image} alt={course.instrument_name || course.title} />}
+                  {course.photo && <img src={course.photo} alt={course.title} />}
                   <div className="course-card-content">
                     <span className="eyebrow">Course</span>
                     <h3>{course.title}</h3>
-                    <p>{course.description || course.instrument_name}</p>
+                    <p>{course.description}</p>
                     <Link to={`/learn/courses/${course.id}`} className="btn btn-primary btn-small">Start course</Link>
                   </div>
                 </article>
@@ -127,6 +134,9 @@ function Home() {
           </div>
 
           <div className="about-panel">
+            <div className="about-art" aria-hidden="true">
+              <img src="/images/sarangi.png" alt="" />
+            </div>
             <div className="stat-row">
               <div className="stat-box">
                 <strong>15+</strong>

@@ -158,7 +158,6 @@ function Learn() {
         <div className="course-meta-row">
           <span><BookOpen size={14} /> {courseLessons.length ? `${courseLessons.length} Lessons` : 'No lessons yet'}</span>
           <span>{isPremium ? 'Premium' : 'Free'}</span>
-          <span>{course.instrument_name || course.slug || 'Beginner'}</span>
         </div>
 
         {isAuthenticated && isStarted && courseLessons.length > 0 && <div className="course-progress-summary"><div><span>Progress</span><strong>{percentage}%</strong></div><div className="course-progress-bar"><span style={{ width: `${percentage}%` }} /></div><small>{nextLesson ? `Continue from ${nextLesson.title}` : 'Course completed'}</small></div>}

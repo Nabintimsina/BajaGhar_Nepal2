@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Music2, SlidersHorizontal } from 'lucide-react'
 import { api } from '../api/client'
 import Tuner from '../components/Tuner'
 import './TunerLab.css'
@@ -110,11 +110,18 @@ function TunerLab() {
         </div>
       </div>
 
-      <div className="container tuner-lab-content">
+      <div id='tuner-lab-content' className="container tuner-lab-content">
         <section className="tuner-lab-panel">
+          <div className="tuner-panel-heading">
+            <div className="tuner-panel-icon"><Music2 size={20} /></div>
+            <div>
+              <span className="eyebrow">BajaGhar tuner</span>
+            </div>
+            <SlidersHorizontal className="tuner-panel-mark" size={22} aria-hidden="true" />
+          </div>
           <div className="tuner-control-grid">
             <div className="tuner-control-field">
-              <label htmlFor="tuner-instrument-select">{t('tuner.selectInstrument')}</label>
+              <label htmlFor="tuner-instrument-select"><Music2 size={15} /> {t('tuner.selectInstrument')}</label>
               <select
                 id="tuner-instrument-select"
                 value={selectedInstrumentId}
@@ -134,7 +141,7 @@ function TunerLab() {
             </div>
 
             <div className="tuner-control-field">
-              <label htmlFor="tuner-standard-select">{t('tuner.selectStandard')}</label>
+              <label htmlFor="tuner-standard-select"><SlidersHorizontal size={15} /> {t('tuner.selectStandard')}</label>
               <select
                 id="tuner-standard-select"
                 value={selectedStandardId}
@@ -169,11 +176,6 @@ function TunerLab() {
           {!error && !isLoading && !detailLoading && !selectedConfig && (
             <div className="tuner-lab-empty">
               <p>{t('tuner.noStandardConfigured')}</p>
-              {selectedInstrumentId && (
-                <Link to={`/instruments/${selectedInstrumentId}`} className="btn btn-primary">
-                  {t('tuner.openInstrumentDetails')}
-                </Link>
-              )}
             </div>
           )}
         </section>

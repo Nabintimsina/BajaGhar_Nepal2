@@ -17,7 +17,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from .models import (
     Achievement,
-    Category,
     ContentAccess,
     Course,
     Favorite,
@@ -35,7 +34,6 @@ from .models import (
 )
 from .serializers import (
     AchievementSerializer,
-    CategorySerializer,
     CourseSerializer,
     FavoriteSerializer,
     ExpertPreviewSerializer,
@@ -96,13 +94,6 @@ def subscription_is_premium(subscription):
 
 def block_raw_model_media(request, file_path):
     return HttpResponse(status=403)
-
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
-    search_fields = ['name', 'description']
 
 
 class ExpertViewSet(viewsets.ModelViewSet):
@@ -202,16 +193,16 @@ class ContactViewSet(viewsets.ModelViewSet):
 
 
 class TunerConfigurationViewSet(viewsets.ModelViewSet):
-    queryset = TunerConfiguration.objects.select_related('instrument').all()
+    queryset = TunerConfiguration.objects.all()
     serializer_class = TunerConfigurationSerializer
     permission_classes = [IsAdminOrReadOnly]
     ordering_fields = ['tuning_name', 'is_default']
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        instrument_id = self.request.query_params.get('instrument')
-        if instrument_id:
-            queryset = queryset.filter(instrument_id=instrument_id)
+        instrument_name = self.request.query_params.get('instrument')
+        if instrument_name:
+            queryset = queryset.filter(instrument=instrument_name)
         return queryset
 
     @action(detail=True, methods=['post'])
@@ -404,9 +395,10 @@ class LearningProgressView(APIView):
 
 
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.select_related('instrument').prefetch_related('lessons').all()
+    queryset = Course.objects.prefetch_related('lessons').all()
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         user = self.request.user
@@ -558,24 +550,18 @@ class TunerSectionView(APIView):
 
     def get(self, request):
         language = get_requested_language(request)
-        instruments = (
-            Instrument.objects.select_related('category')
-            .prefetch_related('tuner_configs')
-            .filter(tuner_configs__isnull=False)
-            .distinct()
-            .order_by('name')
-        )
+        configurations = TunerConfiguration.objects.all().order_by('instrument', '-is_default', 'tuning_name')
+        grouped_configurations = {}
+        for config in configurations:
+            grouped_configurations.setdefault(config.instrument, []).append(config)
 
         payload = []
-        for instrument in instruments:
-            configs = instrument.tuner_configs.all().order_by('-is_default', 'tuning_name')
-            active = configs.filter(is_default=True).first() or configs.first()
+        for instrument_name, configs in grouped_configurations.items():
+            active = next((config for config in configs if config.is_default), configs[0])
             payload.append({
-                'id': instrument.id,
-                'name': get_localized_value(instrument, 'name', language),
-                'region': get_localized_value(instrument, 'region', language),
-                'category': get_localized_value(instrument.category, 'name', language),
-                'tuner_config': TunerConfigurationSerializer(active, context={'request': request}).data if active else None,
+                'id': instrument_name,
+                'name': instrument_name,
+                'tuner_config': TunerConfigurationSerializer(active, context={'request': request}).data,
                 'tuner_configs': TunerConfigurationSerializer(configs, many=True, context={'request': request}).data,
             })
 

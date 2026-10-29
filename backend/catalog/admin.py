@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from types import MethodType
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Category, Expert, Contact, TunerConfiguration, Branding, Course, Lesson, LessonAttachment, Subscription, NormalUser, StaffUser, ExpertUser
+from .models import Expert, Contact, TunerConfiguration, Branding, Course, Lesson, LessonAttachment, Subscription, NormalUser, StaffUser, ExpertUser
 
 User = get_user_model()
 
@@ -107,14 +107,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     ordering = ('user__username',)
 
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'created_at')
-    search_fields = ('name', 'description')
-    prepopulated_fields = {'slug': ('name',)}
-    actions = [delete_selected_with_cascade]
-
-
 @admin.register(Expert)
 class ExpertAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'expertise', 'contact_email', 'created_at')
@@ -148,9 +140,9 @@ class ExpertAdmin(admin.ModelAdmin):
 @admin.register(TunerConfiguration)
 class TunerConfigurationAdmin(admin.ModelAdmin):
     list_display = ('instrument', 'tuning_name', 'is_default', 'updated_at')
-    list_filter = ('is_default', 'instrument__category')
-    search_fields = ('instrument__name', 'tuning_name')
-    ordering = ('instrument__name', '-is_default', 'tuning_name')
+    list_filter = ('is_default',)
+    search_fields = ('instrument', 'tuning_name')
+    ordering = ('instrument', '-is_default', 'tuning_name')
     actions = [delete_selected_with_cascade]
 
 
@@ -206,25 +198,25 @@ class LessonAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'instrument', 'level', 'is_premium', 'is_visible',
+        'title', 'level', 'is_premium', 'is_featured', 'is_visible',
         'lesson_count', 'updated_at',
     )
-    list_filter = ('is_premium', 'is_visible', 'level', 'instrument__category')
-    search_fields = ('title', 'slug', 'description', 'instrument__name')
+    list_filter = ('is_premium', 'is_featured', 'is_visible', 'level')
+    search_fields = ('title', 'slug', 'description')
     autocomplete_fields = ('reference_expert',)
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('order', 'title')
     inlines = (LessonInline,)
     actions = [delete_selected_with_cascade]
     fieldsets = (
-        ('Course identity', {'fields': ('title', 'slug', 'instrument', 'reference_expert', 'description')}),
+        ('Course identity', {'fields': ('title', 'slug', 'reference_expert', 'photo', 'description')}),
         ('Learning information', {
             'fields': (
                 'level', 'estimated_duration_minutes', 'what_you_will_learn',
                 'target_audience', 'requirements',
             ),
         }),
-        ('Access and publishing', {'fields': ('is_premium', 'is_visible', 'order')}),
+        ('Access and publishing', {'fields': ('is_premium', 'is_featured', 'is_visible', 'order')}),
         ('Timestamps', {'fields': ('created_at', 'updated_at')}),
     )
     readonly_fields = ('created_at', 'updated_at')

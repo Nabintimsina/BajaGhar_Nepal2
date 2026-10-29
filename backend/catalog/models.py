@@ -38,25 +38,9 @@ class UserProfile(models.Model):
         return f'{self.user.username} profile'
 
 
-class Category(models.Model):
-    name = models.CharField(max_length=120, unique=True)
-    name_ne = models.CharField(max_length=120, blank=True, default='')
-    slug = models.SlugField(max_length=140, unique=True)
-    description = models.TextField(blank=True)
-    description_ne = models.TextField(blank=True, default='')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self) -> str:
-        return self.name
-
-
 class Instrument(models.Model):
     name = models.CharField(max_length=150)
     name_ne = models.CharField(max_length=150, blank=True, default='')
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='instruments')
     region = models.CharField(max_length=120)
     region_ne = models.CharField(max_length=120, blank=True, default='')
     description = models.TextField()
@@ -186,7 +170,7 @@ class Tutorial(models.Model):
 
 
 class TunerConfiguration(models.Model):
-    instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, related_name='tuner_configs')
+    instrument = models.CharField(max_length=150)
     tuning_name = models.CharField(max_length=100, default='Standard')
     tuning_name_ne = models.CharField(max_length=100, blank=True, default='')
     instructions = models.TextField(blank=True, default='', help_text='Optional tuning tips or setup instructions shown on the tuner page')
@@ -220,7 +204,7 @@ class TunerConfiguration(models.Model):
             self.is_default = True
 
     def __str__(self) -> str:
-        return f"{self.instrument.name} - {self.tuning_name}"
+        return f"{self.instrument} - {self.tuning_name}"
 
 
 class Branding(models.Model):
@@ -296,14 +280,15 @@ class Course(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     description = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='courses/photos/', blank=True, null=True)
     level = models.CharField(max_length=80, default='Beginner')
     estimated_duration_minutes = models.PositiveIntegerField(default=0)
     what_you_will_learn = models.TextField(blank=True, default='')
     target_audience = models.TextField(blank=True, default='')
     requirements = models.TextField(blank=True, default='')
-    instrument = models.ForeignKey('Instrument', on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
     reference_expert = models.ForeignKey('Expert', on_delete=models.SET_NULL, null=True, blank=True, related_name='courses', help_text='The main expert/instructor for this course')
     is_premium = models.BooleanField(default=False)
+    is_featured = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
     is_visible = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

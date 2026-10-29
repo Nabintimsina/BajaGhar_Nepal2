@@ -133,7 +133,7 @@ function LessonDetail() {
             <Link to={`/learn/courses/${courseId}`}><ArrowLeft size={17} /> {course.title}</Link>
             <p>{course.description}</p>
           </div>
-          <span>{course.instrument_name || 'BajaGhar course'} · {lessons.length} lessons</span>
+          <span>BajaGhar course · {lessons.length} lessons</span>
         </div>
       </section>
       <main className="container lesson-main">
