@@ -169,6 +169,10 @@
   align-items: flex-start;
 }
 
+.course-card-badges { display: inline-flex; align-items: center; gap: .45rem; }
+.favorite-course-button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border-soft); border-radius: 50%; background: var(--secondary-light); color: var(--text-secondary); cursor: pointer; transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast); }
+.favorite-course-button:hover, .favorite-course-button.active { border-color: var(--accent-gold); background: var(--tint-gold-soft); color: var(--primary-maroon); transform: translateY(-1px); }
+
 .course-card-header h3 {
   margin: 0.35rem 0 0;
   color: var(--primary-maroon);
@@ -197,6 +201,15 @@
   border-radius: 999px;
   padding: 0.38rem 0.7rem;
 }
+
+.course-progress-summary { display: grid; gap: .45rem; margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--border-soft); }
+.course-progress-summary > div:first-child { display: flex; justify-content: space-between; gap: .5rem; color: var(--text-secondary); font-size: var(--fs-caption); }
+.course-progress-summary strong { color: var(--primary-maroon); font-size: 1rem; }
+.course-progress-bar { height: 7px; overflow: hidden; border-radius: 999px; background: var(--secondary-beige); }
+.course-progress-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent-gold); transition: width var(--transition-medium); }
+.course-progress-summary small { overflow: hidden; color: var(--primary-maroon); font-size: var(--fs-caption); font-weight: var(--fw-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.course-card-actions .btn:disabled { cursor: not-allowed; background: var(--secondary-beige); border-color: var(--border-soft); color: var(--text-secondary); }
+.session-expired-message { padding: var(--spacing-xl); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); background: var(--surface-card); text-align: center; }
 
 .course-card-actions {
   display: flex;

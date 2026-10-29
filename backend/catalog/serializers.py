@@ -195,8 +195,9 @@ class CourseSerializer(serializers.ModelSerializer):
             'estimated_duration_minutes', 'what_you_will_learn',
             'target_audience', 'requirements', 'instrument',
             'instrument_name', 'instrument_image', 'instrument_is_featured',
-            'reference_expert', 'is_premium', 'order', 'is_visible', 'lessons_count',
+            'reference_expert', 'is_premium', 'order', 'is_visible', 'lessons_count', 'updated_at',
         ]
+        read_only_fields = ['updated_at']
 
     def validate(self, attrs):
         request = self.context.get('request')
@@ -326,8 +327,9 @@ class LessonSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'photo', 'attachment_type',
             'attachment_photo', 'attachment_video', 'attachment_3d_model',
             'attachments', 'course', 'order', 'is_premium', 'duration_minutes', 'video_url', 'content',
-            'remove_photo', 'remove_attachment_3d_model',
+            'remove_photo', 'remove_attachment_3d_model', 'updated_at',
         ]
+        read_only_fields = ['updated_at']
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

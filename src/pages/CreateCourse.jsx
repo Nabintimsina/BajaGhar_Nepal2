@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Edit3, Eye, EyeOff, Plus, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Edit3, Eye, EyeOff, GripVertical, Plus, Save, Trash2 } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -19,6 +19,7 @@ function CreateCourse() {
   const [isLoading, setIsLoading] = useState(Boolean(id))
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [draggedLessonId, setDraggedLessonId] = useState(null)
 
   useEffect(() => {
     if (!location.state?.success) return
@@ -77,6 +78,45 @@ function CreateCourse() {
     }
   }
 
+  const formatUpdatedAt = (value) => value ? `Updated ${new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))}` : ''
+
+  const togglePublish = async () => {
+    if (!course) return
+    const nextVisible = !course.is_visible
+    const action = nextVisible ? 'publish' : 'unpublish'
+    if (!window.confirm(`Are you sure you want to ${action} this course?`)) return
+    setError('')
+    setSuccess('')
+    try {
+      const savedCourse = await api.patch(`courses/${course.id}/`, { is_visible: nextVisible })
+      setCourse(savedCourse)
+      setForm((current) => ({ ...current, is_visible: nextVisible }))
+      setSuccess(nextVisible ? 'Course published successfully.' : 'Course unpublished successfully.')
+    } catch (err) {
+      setError(err.message || `Unable to ${action} this course.`)
+    }
+  }
+
+  const reorderLessons = async (targetId) => {
+    if (!draggedLessonId || draggedLessonId === targetId) return
+    const previousLessons = lessons
+    const nextLessons = [...lessons]
+    const fromIndex = nextLessons.findIndex((item) => item.id === draggedLessonId)
+    const toIndex = nextLessons.findIndex((item) => item.id === targetId)
+    const [movedLesson] = nextLessons.splice(fromIndex, 1)
+    nextLessons.splice(toIndex, 0, movedLesson)
+    const orderedLessons = nextLessons.map((item, index) => ({ ...item, order: index + 1 }))
+    setLessons(orderedLessons)
+    setDraggedLessonId(null)
+    try {
+      await Promise.all(orderedLessons.map((item) => api.patch(`lessons/${item.id}/`, { order: item.order })))
+      setSuccess('Lesson order saved successfully.')
+    } catch (err) {
+      setLessons(previousLessons)
+      setError(err.message || 'Unable to save lesson order.')
+    }
+  }
+
   if (loading || isLoading) return <div className="container course-editor-state"><h2>{isLoading ? 'Loading course...' : 'Checking expert access...'}</h2></div>
   if (!isExpert) return <div className="container course-editor-state"><h2>Expert access required</h2><p>This course editor is available only to administrator-linked experts.</p><Link to="/experts" className="btn btn-primary">Back to Experts</Link></div>
 
@@ -84,7 +124,7 @@ function CreateCourse() {
     <main className="container course-editor-page">
       <header className="course-editor-header"><Link to="/expert-dashboard" className="course-editor-back"><ArrowLeft size={17} /> Course studio</Link><h1>{id ? 'Edit course' : 'Create a course'}</h1></header>
       <section>
-        <div className="course-section-heading"><h2>Course details</h2>{course && <span className={`course-status-label ${course.is_visible ? 'published' : 'draft'}`}>{course.is_visible ? <><Eye size={14} /> Published</> : <><EyeOff size={14} /> Draft</>}</span>}</div>
+        <div className="course-section-heading"><div><h2>Course details</h2>{course?.updated_at && <small className="editor-updated-at">{formatUpdatedAt(course.updated_at)}</small>}</div>{course && <div className="course-status-actions"><span className={`course-status-label ${course.is_visible ? 'published' : 'draft'}`}>{course.is_visible ? <><Eye size={14} /> Published</> : <><EyeOff size={14} /> Draft</>}</span><button type="button" className="btn btn-secondary btn-compact" onClick={togglePublish}>{course.is_visible ? 'Unpublish' : 'Publish'}</button></div>}</div>
         <form className="course-editor-form" onSubmit={submit}>
           <label>Course title<input name="title" value={form.title} onChange={updateField} required maxLength={200} /></label><label>Description<textarea name="description" value={form.description} onChange={updateField} rows="4" required /></label>
           <div className="course-editor-grid"><label>Level<select name="level" value={form.level} onChange={updateField}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label><label>Estimated minutes<input name="estimated_duration_minutes" type="number" min="0" value={form.estimated_duration_minutes} onChange={updateField} /></label></div>
@@ -94,7 +134,7 @@ function CreateCourse() {
         </form>
       </section>
       {course && <section className="lesson-editor-section"><div className="course-section-heading"><h2>Lessons <small>{lessons.length}</small></h2><Link className="btn btn-primary btn-compact" to={`/expert-dashboard/courses/${course.id}/lessons/new`}><Plus size={17} /> Add lesson</Link></div>
-        {lessons.length > 0 ? <div className="created-lesson-list">{lessons.map((lesson) => <div key={lesson.id}><span className="lesson-list-title"><BookOpen size={17} /><strong>{lesson.order}. {lesson.title}</strong><small>{lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'Self-paced'}</small></span><span className="lesson-row-actions"><Link className="lesson-action" to={`/expert-dashboard/courses/${course.id}/lessons/${lesson.id}/edit`} title="Edit lesson" aria-label={`Edit ${lesson.title}`}><Edit3 size={15} /></Link><button className="lesson-action danger" type="button" title="Delete lesson" aria-label={`Delete ${lesson.title}`} onClick={() => deleteLesson(lesson)}><Trash2 size={15} /></button></span></div>)}</div> : <div className="lesson-list-empty"><BookOpen size={26} /><p>No lessons yet</p><Link className="btn btn-secondary btn-compact" to={`/expert-dashboard/courses/${course.id}/lessons/new`}>Add first lesson</Link></div>}
+        {lessons.length > 0 ? <div className="created-lesson-list">{lessons.map((lesson) => <div key={lesson.id} draggable onDragStart={() => setDraggedLessonId(lesson.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => reorderLessons(lesson.id)} className={draggedLessonId === lesson.id ? 'is-dragging' : ''}><span className="lesson-list-title"><GripVertical className="lesson-drag-handle" size={17} aria-hidden="true" /><BookOpen size={17} /><strong>{lesson.order}. {lesson.title}</strong><small>{lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'Self-paced'}{lesson.updated_at ? ` · ${formatUpdatedAt(lesson.updated_at)}` : ''}</small></span><span className="lesson-row-actions"><Link className="lesson-action" to={`/expert-dashboard/courses/${course.id}/lessons/${lesson.id}/edit`} title="Edit lesson" aria-label={`Edit ${lesson.title}`}><Edit3 size={15} /></Link><button className="lesson-action danger" type="button" title="Delete lesson" aria-label={`Delete ${lesson.title}`} onClick={() => deleteLesson(lesson)}><Trash2 size={15} /></button></span></div>)}</div> : <div className="lesson-list-empty"><BookOpen size={26} /><p>No lessons yet</p><Link className="btn btn-secondary btn-compact" to={`/expert-dashboard/courses/${course.id}/lessons/new`}>Add first lesson</Link></div>}
       </section>}
     </main>
   )

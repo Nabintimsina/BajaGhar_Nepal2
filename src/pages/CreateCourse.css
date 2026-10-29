@@ -72,6 +72,8 @@
 .course-status-label { display: inline-flex; align-items: center; gap: .35rem; font-weight: var(--fw-semibold); }
 .course-status-label.published { color: #26734d; }
 .course-status-label.draft { color: #976b16; }
+.course-status-actions { display: flex; align-items: center; gap: .75rem; }
+.editor-updated-at { display: block; margin-top: .35rem; color: var(--text-secondary); font-size: var(--fs-caption); }
 
 .course-editor-form {
   display: grid;
@@ -114,7 +116,11 @@
 .lesson-editor-section { margin-top: var(--spacing-2xl); }
 .created-lesson-list { display: grid; gap: 0.6rem; margin-top: var(--spacing-lg); }
 .created-lesson-list div { display: flex; justify-content: space-between; gap: var(--spacing-md); padding: 0.8rem 1rem; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--secondary-light); }
+.created-lesson-list div[draggable="true"] { cursor: grab; }
+.created-lesson-list div[draggable="true"]:active { cursor: grabbing; }
+.created-lesson-list div.is-dragging { opacity: .55; border-color: var(--accent-gold); }
 .lesson-list-title { display: inline-flex; align-items: center; gap: .6rem; min-width: 0; color: var(--primary-maroon); }.lesson-list-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.lesson-list-title small { color: var(--text-secondary); font-size: .82rem; font-weight: var(--fw-regular); }
+.lesson-drag-handle { color: var(--text-secondary); flex-shrink: 0; }
 .lesson-row-actions { display: inline-flex; align-items: center; gap: .35rem; color: var(--text-secondary); }
 .lesson-action { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--secondary-light); color: var(--primary-maroon); cursor: pointer; }.lesson-action:hover { border-color: var(--accent-gold); background: var(--tint-gold-soft); }.lesson-action.danger { color: var(--primary-deep-red); }
 .lesson-list-empty { display: grid; place-items: center; gap: .65rem; padding: var(--spacing-xl); border: 1px dashed var(--border-soft); color: var(--text-secondary); text-align: center; }

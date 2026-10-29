@@ -91,7 +91,7 @@ function Home() {
           ) : (
             <div className="featured-grid">
               {featuredCourses.map((course) => (
-                <article className="course-card">
+                <article className="course-card" key={course.id}>
                   {course.instrument_image && <img src={course.instrument_image} alt={course.instrument_name || course.title} />}
                   <div className="course-card-content">
                     <span className="eyebrow">Course</span>

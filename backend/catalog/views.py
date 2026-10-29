@@ -296,6 +296,25 @@ class MeView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({'user': UserSerializer(request.user, context={'request': request}).data})
+
+
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        current_password = request.data.get('current_password') or ''
+        new_password = request.data.get('new_password') or ''
+        if not request.user.check_password(current_password):
+            return Response({'detail': 'Your current password is incorrect.'}, status=400)
+        if len(new_password) < 8:
+            return Response({'detail': 'Your new password must be at least 8 characters.'}, status=400)
+        if current_password == new_password:
+            return Response({'detail': 'Your new password must be different from your current password.'}, status=400)
+        request.user.set_password(new_password)
+        request.user.save(update_fields=['password'])
+        return Response({'detail': 'Password changed successfully.'})
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -473,6 +492,10 @@ class DashboardView(APIView):
                 recent_items.append(recent_data)
 
         favorite_course_ids = [item.object_id for item in favorites if item.content_type == 'course']
+        favorite_courses = Course.objects.filter(
+            id__in=favorite_course_ids,
+            is_visible=True,
+        )
         if favorite_course_ids:
             recommended_courses = Course.objects.filter(is_visible=True).exclude(id__in=favorite_course_ids)[:3]
         else:
@@ -509,6 +532,7 @@ class DashboardView(APIView):
             'user': UserSerializer(user).data,
             'subscription': SubscriptionSerializer(subscription).data,
             'favorites': FavoriteSerializer(favorites, many=True).data,
+            'favorite_courses': CourseSerializer(favorite_courses, many=True).data,
             'recently_viewed': recent_items,
             'progress': LearningProgressSerializer(progress, many=True).data,
             'course_progress': course_progress,

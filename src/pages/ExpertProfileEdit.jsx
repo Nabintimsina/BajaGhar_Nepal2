@@ -3,6 +3,7 @@ import { ArrowLeft, Save, UserRound } from 'lucide-react'
 import { Link, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import PasswordChangeForm from '../components/PasswordChangeForm'
 import './ExpertProfileEdit.css'
 
 function ExpertProfileEdit() {
@@ -81,6 +82,7 @@ function ExpertProfileEdit() {
         {message && <p className={`expert-edit-message ${messageType}`} role={messageType === 'error' ? 'alert' : 'status'}>{message}</p>}
         <button className="btn btn-primary" type="submit" disabled={isSaving}><Save size={17} /> {isSaving ? 'Saving details...' : 'Save my details'}</button>
       </form>
+      <PasswordChangeForm />
     </main>
   )
 }

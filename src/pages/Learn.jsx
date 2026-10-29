@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, LockKeyhole, Play, Search } from 'lucide-react'
+import { Bookmark, BookOpen, Check, LockKeyhole, Play, Search } from 'lucide-react'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import './Learn.css'
@@ -17,6 +17,9 @@ function Learn() {
   const [activeFilter, setActiveFilter] = useState('featured')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [sessionExpired, setSessionExpired] = useState(false)
+  const [progress, setProgress] = useState([])
+  const [favoriteIds, setFavoriteIds] = useState(new Set())
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -42,8 +45,21 @@ function Learn() {
 
         setCourses(courseList)
         setLessons(lessonList)
+
+        if (isAuthenticated) {
+          const [progressResponse, favoritesResponse] = await Promise.allSettled([
+            api.get('auth/progress/'),
+            api.get('auth/favorites/'),
+          ])
+          if ([progressResponse, favoritesResponse].some((result) => result.status === 'rejected' && result.reason?.code === 'AUTH_EXPIRED')) setSessionExpired(true)
+          if (progressResponse.status === 'fulfilled') setProgress(Array.isArray(progressResponse.value) ? progressResponse.value : [])
+          if (favoritesResponse.status === 'fulfilled') {
+            setFavoriteIds(new Set((favoritesResponse.value || []).filter((item) => item.content_type === 'course').map((item) => Number(item.object_id))))
+          }
+        }
       } catch (err) {
         if (isMounted) {
+          setSessionExpired(err.code === 'AUTH_EXPIRED')
           setError(err.message)
           setCourses([])
           setLessons([])
@@ -58,7 +74,7 @@ function Learn() {
     return () => {
       isMounted = false
     }
-  }, [activeLanguage])
+  }, [activeLanguage, isAuthenticated])
 
   const filteredCourses = useMemo(() => {
     if (!searchTerm.trim()) return courses
@@ -80,14 +96,14 @@ function Learn() {
     return filteredCourses
   }, [activeFilter, filteredCourses, freeCourses, premiumCourses])
 
-  const handleCourseAction = (course) => {
+  const handleCourseAction = (course, nextLesson = null) => {
     if (!isAuthenticated) {
       const returnTo = `/learn/courses/${course.id}`
       navigate('/login', { state: { returnTo, courseId: course.id } })
       return
     }
 
-    navigate(`/learn/courses/${course.id}`)
+    navigate(nextLesson ? `/learn/courses/${course.id}/lessons/${nextLesson.id}` : `/learn/courses/${course.id}`)
 
     api.post('auth/recently-viewed/', {
       content_type: 'course',
@@ -96,9 +112,36 @@ function Learn() {
     }).catch(() => {})
   }
 
+  const toggleFavorite = async (course) => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { returnTo: '/learn' } })
+      return
+    }
+    const isFavorite = favoriteIds.has(Number(course.id))
+    try {
+      if (isFavorite) await api.delete(`auth/favorites/?content_type=course&object_id=${course.id}`)
+      else await api.post('auth/favorites/', { content_type: 'course', object_id: Number(course.id), title: course.title })
+      setFavoriteIds((current) => {
+        const next = new Set(current)
+        if (isFavorite) next.delete(Number(course.id))
+        else next.add(Number(course.id))
+        return next
+      })
+    } catch (err) {
+      if (err.code === 'AUTH_EXPIRED') setSessionExpired(true)
+      else setError(err.message || 'Unable to update your favorites.')
+    }
+  }
+
   const renderCourseCard = (course) => {
     const courseLessons = lessons.filter((lesson) => Number(lesson.course) === Number(course.id))
     const isPremium = Boolean(course.is_premium)
+    const completedLessons = new Set(progress.filter((item) => Number(item.course) === Number(course.id) && item.is_completed).map((item) => item.lesson_title))
+    const completedCount = courseLessons.filter((lesson) => completedLessons.has(lesson.title)).length
+    const percentage = courseLessons.length ? Math.round((completedCount / courseLessons.length) * 100) : 0
+    const nextLesson = courseLessons.find((lesson) => !completedLessons.has(lesson.title))
+    const isStarted = progress.some((item) => Number(item.course) === Number(course.id))
+    const isFavorite = favoriteIds.has(Number(course.id))
 
     return (
       <div key={course.id} className="course-card">
@@ -107,20 +150,22 @@ function Learn() {
             <span className="eyebrow">Course</span>
             <h3>{course.title}</h3>
           </div>
-          {isPremium && <span className="premium-tag"><LockKeyhole size={13} /> Premium</span>}
+          <div className="course-card-badges">{isPremium && <span className="premium-tag"><LockKeyhole size={13} /> Premium</span>}<button type="button" className={`favorite-course-button ${isFavorite ? 'active' : ''}`} onClick={() => toggleFavorite(course)} aria-label={isFavorite ? `Remove ${course.title} from favorites` : `Add ${course.title} to favorites`} title={isFavorite ? 'Remove favorite' : 'Add favorite'}>{isFavorite ? <Check size={16} /> : <Bookmark size={16} />}</button></div>
         </div>
 
         <p>{course.description || 'Explore this guided learning path in Nepal’s musical heritage.'}</p>
 
         <div className="course-meta-row">
-          <span><BookOpen size={14} /> {courseLessons.length} Lessons</span>
+          <span><BookOpen size={14} /> {courseLessons.length ? `${courseLessons.length} Lessons` : 'No lessons yet'}</span>
           <span>{isPremium ? 'Premium' : 'Free'}</span>
           <span>{course.instrument_name || course.slug || 'Beginner'}</span>
         </div>
 
+        {isAuthenticated && isStarted && courseLessons.length > 0 && <div className="course-progress-summary"><div><span>Progress</span><strong>{percentage}%</strong></div><div className="course-progress-bar"><span style={{ width: `${percentage}%` }} /></div><small>{nextLesson ? `Continue from ${nextLesson.title}` : 'Course completed'}</small></div>}
+
         <div className="course-card-actions">
-          <button type="button" className="btn btn-primary btn-small" onClick={() => handleCourseAction(course)}>
-            <Play size={15} /> Start Learning
+          <button type="button" className="btn btn-primary btn-small" onClick={() => handleCourseAction(course, isStarted ? nextLesson : null)} disabled={!courseLessons.length}>
+            <Play size={15} /> {courseLessons.length ? isStarted && isAuthenticated ? 'Continue learning' : 'Start learning' : 'Coming soon'}
           </button>
           {!isAuthenticated && isPremium && (
             <button type="button" className="btn btn-secondary btn-small" onClick={() => navigate('/login')}>
@@ -176,6 +221,8 @@ function Learn() {
             <div className="content-article">
               <h2>Loading learning journeys...</h2>
             </div>
+          ) : sessionExpired ? (
+            <div className="content-article session-expired-message"><h2>Your session expired</h2><p>Please log in again to see progress and manage favorites.</p><button className="btn btn-primary" type="button" onClick={() => navigate('/login', { state: { returnTo: '/learn' } })}>Log in again</button></div>
           ) : error ? (
             <div className="content-article">
               <h2>Unable to load courses</h2>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { BookOpen, CheckCircle2, Sparkles } from 'lucide-react'
+import { Bookmark, BookOpen, CheckCircle2 } from 'lucide-react'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import './Dashboard.css'
@@ -23,7 +23,7 @@ function Dashboard() {
   }
 
   const courseProgress = dashboard?.course_progress || []
-  const recommended = dashboard?.recommended_courses || []
+  const favoriteCourses = dashboard?.favorite_courses || []
   const completedCourses = courseProgress.filter((item) => item.is_completed).length
 
   return (
@@ -69,22 +69,22 @@ function Dashboard() {
 
         <section className="detail-box dashboard-card wide-card">
           <div className="section-heading section-heading-tight">
-            <span className="eyebrow">Recommended</span>
-            <h2>For you</h2>
+            <span className="eyebrow">Saved courses</span>
+            <h2>Your favorites</h2>
           </div>
-          {recommended.length > 0 ? (
+          {favoriteCourses.length > 0 ? (
             <div className="recommendation-grid">
-              {recommended.map((course) => (
+              {favoriteCourses.map((course) => (
                 <Link className="dashboard-recommendation" to={`/learn/courses/${course.id}`} key={course.id}>
-                  <Sparkles size={18} />
+                  <Bookmark size={18} />
                   <strong>{course.title}</strong>
-                  <p>{course.description || 'Explore this next step in your musical journey.'}</p>
-                  <span className="dashboard-action">View course <span aria-hidden="true">→</span></span>
+                  <p>{course.description || 'Return to this saved learning path.'}</p>
+                  <span className="dashboard-action">Open course <span aria-hidden="true">→</span></span>
                 </Link>
               ))}
             </div>
           ) : (
-            <p>Keep exploring instruments and lessons to unlock tailored recommendations.</p>
+            <div className="dashboard-empty"><Bookmark size={24} /><p>Your favorite courses will appear here.</p><Link className="btn btn-secondary" to="/learn">Browse courses</Link></div>
           )}
         </section>
 

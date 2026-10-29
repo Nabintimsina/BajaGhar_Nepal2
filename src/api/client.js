@@ -204,6 +204,11 @@ const request = async (path, options = {}) => {
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      const authError = new Error('Your session has expired. Please log in again.')
+      authError.code = 'AUTH_EXPIRED'
+      throw authError
+    }
     throw new Error(await extractErrorMessage(response))
   }
 

@@ -111,11 +111,11 @@ function Experts() {
               <button className="btn btn-primary btn-large" onClick={handleApplyExpert}>
                 {t('experts.joinUs')}
               </button>
-              {isExpert ? (
+              {/* {isExpert ? (
                 <button className="btn btn-secondary btn-large" type="button" onClick={() => navigate('/expert-dashboard')}>Logged in as expert</button>
               ) : (
                 <button className="btn btn-secondary btn-large" type="button" onClick={() => navigate('/login', { state: { returnTo: '/experts' } })}>Login as expert</button>
-              )}
+              )} */}
             </div>
           </div>
         </div>

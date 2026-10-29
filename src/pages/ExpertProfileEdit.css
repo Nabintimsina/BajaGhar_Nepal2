@@ -25,5 +25,10 @@
 .expert-edit-message { margin: 0; padding: .8rem 1rem; border: 1px solid; border-radius: var(--radius-md); font-weight: var(--fw-semibold); }
 .expert-edit-message.success { border-color: #9ac9ac; background: #edf8f0; color: #236640; }
 .expert-edit-message.error { border-color: #e4a6a6; background: #fff1f1; color: var(--primary-deep-red); }
+.password-change-section { margin-top: var(--spacing-lg); margin-bottom: 10px; padding: var(--spacing-lg); border: 1px solid var(--border-soft); border-top: 4px solid var(--primary-maroon); border-radius: var(--radius-lg); background: var(--secondary-light); box-shadow: var(--shadow-card); }
+.password-change-section h2 { display: flex; align-items: center; gap: .45rem; }
+.password-change-form { display: grid; gap: var(--spacing-md); }
+.password-change-form label { display: grid; gap: .4rem; color: var(--primary-maroon); font-weight: var(--fw-semibold); }
+.password-change-form input { width: 100%; padding: .75rem; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font: inherit; }
 .expert-edit-state { padding: var(--spacing-2xl) var(--spacing-md); text-align: center; }
 @media (max-width: 600px) { .expert-edit-page { padding-top: var(--spacing-lg); } .expert-edit-form { padding: var(--spacing-md); } .expert-edit-grid { grid-template-columns: 1fr; } .expert-edit-heading { align-items: flex-start; } .expert-photo-row { align-items: flex-start; flex-direction: column; } }
