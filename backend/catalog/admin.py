@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from types import MethodType
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from .models import Expert, Contact, TunerConfiguration, Branding, Course, Lesson, LessonAttachment, Subscription, NormalUser, StaffUser, ExpertUser
 
 User = get_user_model()
@@ -151,12 +151,65 @@ class LessonInline(admin.StackedInline):
     extra = 0
     min_num = 0
     ordering = ('order', 'id')
-    fields = (
-        'title', 'description', 'attachment_type', 'attachment_action', 'attachment_photo',
-        'attachment_3d_model', 'order', 'is_premium', 'duration_minutes',
-        'video_url', 'content', 'created_at', 'updated_at',
+    fieldsets = (
+        ('Lesson details', {
+            'fields': ('title', 'content', 'order', 'duration_minutes', 'is_premium'),
+        }),
+        ('Media', {
+            'fields': (
+                'attachment_type', 'attachment_photo', 'video_url',
+                'attachment_3d_model', 'current_media', 'attachment_action',
+            ),
+            'description': 'Choose a media type. Video attachments use a YouTube link.',
+        }),
+        ('Record information', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
     )
-    readonly_fields = ('attachment_action', 'created_at', 'updated_at')
+    readonly_fields = (
+        'attachment_action', 'current_media',
+        'created_at', 'updated_at',
+    )
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'video_url':
+            kwargs['label'] = 'YouTube video link'
+            kwargs['help_text'] = 'Paste a YouTube video URL.'
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    @admin.display(description='Attached media')
+    def current_media(self, obj):
+        if not obj:
+            return 'Save the lesson first to attach media.'
+
+        media_items = []
+        direct_media = (
+            ('Photo', obj.attachment_photo.url if obj.attachment_photo else '', True),
+            ('YouTube video', obj.video_url, False),
+            ('3D model', obj.attachment_3d_model.url if obj.attachment_3d_model else '', False),
+        )
+        for label, url, is_image in direct_media:
+            if url:
+                preview = format_html(
+                    '<img src="{}" style="display:block;max-width:180px;max-height:100px;margin-bottom:6px;object-fit:contain;" />',
+                    url,
+                ) if is_image else ''
+                media_items.append(format_html(
+                    '<div style="margin-bottom:12px;">{}<strong>{}</strong>: <a href="{}" target="_blank" rel="noopener">Open file</a></div>',
+                    preview, label, url,
+                ))
+
+        for attachment in obj.attachments.all():
+            field = attachment.photo or attachment.model_3d
+            url = field.url if field else attachment.video_url
+            if url:
+                media_items.append(format_html(
+                    '<div style="margin-bottom:12px;"><strong>{}</strong>: <a href="{}" target="_blank" rel="noopener">Open attachment</a></div>',
+                    attachment.get_attachment_type_display(), url,
+                ))
+
+        return format_html_join('', '{}', ((item,) for item in media_items)) if media_items else 'No media attached.'
 
     @admin.display(description='Attachments')
     def attachment_action(self, obj):
@@ -177,6 +230,12 @@ class LessonAttachmentInline(admin.StackedInline):
     ordering = ('order', 'id')
     fields = ('attachment_type', 'photo', 'video_url', 'model_3d', 'order')
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'video_url':
+            kwargs['label'] = 'YouTube video link'
+            kwargs['help_text'] = 'Paste a YouTube video URL.'
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     class Media:
         js = ('catalog/admin/lesson_attachments.js',)
 
@@ -189,8 +248,8 @@ class LessonAdmin(admin.ModelAdmin):
     ordering = ('course', 'order', 'id')
     inlines = (LessonAttachmentInline,)
     fields = (
-        'course', 'title', 'description', 'order', 'is_premium', 'duration_minutes',
-        'video_url', 'content', 'created_at', 'updated_at',
+        'course', 'title', 'content', 'order', 'is_premium', 'duration_minutes',
+        'video_url', 'created_at', 'updated_at',
     )
     readonly_fields = ('created_at', 'updated_at')
 

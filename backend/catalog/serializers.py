@@ -256,20 +256,14 @@ class ProtectedLessonModelField(serializers.FileField):
 class LessonSerializer(serializers.ModelSerializer):
     attachments = LessonAttachmentSerializer(many=True, read_only=True)
     attachment_3d_model = ProtectedLessonModelField(required=False, allow_null=True)
-    remove_photo = serializers.BooleanField(write_only=True, required=False, default=False)
     remove_attachment_3d_model = serializers.BooleanField(write_only=True, required=False, default=False)
 
     def create(self, validated_data):
-        validated_data.pop('remove_photo', False)
         validated_data.pop('remove_attachment_3d_model', False)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        remove_photo = validated_data.pop('remove_photo', False)
         remove_model = validated_data.pop('remove_attachment_3d_model', False)
-        if remove_photo and 'photo' not in validated_data and instance.photo:
-            instance.photo.delete(save=False)
-            instance.photo = None
         if remove_model and 'attachment_3d_model' not in validated_data and instance.attachment_3d_model:
             instance.attachment_3d_model.delete(save=False)
             instance.attachment_3d_model = None
@@ -283,7 +277,6 @@ class LessonSerializer(serializers.ModelSerializer):
             return {
                 'id': data['id'],
                 'title': data['title'],
-                'description': data['description'],
                 'course': data['course'],
                 'order': data['order'],
                 'is_premium': data['is_premium'],
@@ -313,7 +306,6 @@ class LessonSerializer(serializers.ModelSerializer):
         if is_premium_content and not has_premium_access and not is_content_manager:
             data['content'] = ''
             data['video_url'] = ''
-            data['photo'] = None
             data['attachment_type'] = 'none'
             data['attachment_photo'] = None
             data['attachment_video'] = None
@@ -325,10 +317,10 @@ class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = [
-            'id', 'title', 'description', 'photo', 'attachment_type',
+            'id', 'title', 'attachment_type',
             'attachment_photo', 'attachment_video', 'attachment_3d_model',
             'attachments', 'course', 'order', 'is_premium', 'duration_minutes', 'video_url', 'content',
-            'remove_photo', 'remove_attachment_3d_model', 'updated_at',
+            'remove_attachment_3d_model', 'updated_at',
         ]
         read_only_fields = ['updated_at']
 

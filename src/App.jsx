@@ -53,6 +53,7 @@ function App() {
                 <Route path="/expert-dashboard/courses/new" element={<CreateCourse />} />
                 <Route path="/expert-dashboard/courses/:id/edit" element={<CreateCourse />} />
                 <Route path="/expert-dashboard/courses/:courseId/lessons/new" element={<LessonEditor />} />
+                <Route path="/expert-dashboard/courses/:courseId/lessons/:lessonId" element={<LessonEditor />} />
                 <Route path="/expert-dashboard/courses/:courseId/lessons/:lessonId/edit" element={<LessonEditor />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />

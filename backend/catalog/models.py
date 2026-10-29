@@ -321,8 +321,6 @@ class Lesson(models.Model):
     ]
 
     title = models.CharField(max_length=220)
-    description = models.TextField(blank=True)
-    photo = models.ImageField(upload_to='lessons/photos/', blank=True, null=True)
     attachment_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPES, default='none')
     attachment_photo = models.ImageField(upload_to='lessons/attachments/photos/', blank=True, null=True)
     attachment_video = models.FileField(upload_to='lessons/attachments/videos/', blank=True, null=True)

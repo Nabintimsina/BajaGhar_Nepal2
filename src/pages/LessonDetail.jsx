@@ -98,9 +98,7 @@ function LessonDetail() {
     ? [{ id: lesson.id, title: lesson.title, description: lesson.description, video_url: lessonVideo }]
       : []
   const isPremium = Boolean((course.is_premium || lesson.is_premium) && !subscription?.is_premium)
-  const lessonPhoto = lesson.attachment_type === 'photo' && lesson.attachment_photo
-    ? lesson.attachment_photo
-    : lesson.photo
+  const lessonPhoto = lesson.attachment_photo
   const lessonModel = lesson.attachment_type === '3d_model' ? lesson.attachment_3d_model : null
   const attachments = lesson.attachments || []
 
@@ -141,7 +139,7 @@ function LessonDetail() {
           <article className="lesson-content-panel">
             <div className="lesson-kicker"><span>Lesson {String(lessonIndex + 1).padStart(2, '0')}</span><span><Clock3 size={14} /> {lesson.duration_minutes || 'Self-paced'}{lesson.duration_minutes ? ' min' : ''}</span></div>
             <h1>{lesson.title}</h1>
-            <p className="lesson-description">{lesson.description}</p>
+            {!isPremium && lesson.content && <div className="lesson-text-content"><p>{lesson.content}</p></div>}
             {lessonPhoto && <img className="lesson-photo" src={lessonPhoto} alt={lesson.title} />}
             {lessonModel && <div className="lesson-attachment-model"><Viewer3D modelSrc={lessonModel} title={lesson.title} /></div>}
             {attachments.length > 0 && <div className="lesson-attachments">
@@ -153,7 +151,7 @@ function LessonDetail() {
                   return <div className="lesson-attachment-model" key={attachment.id}><Viewer3D modelSrc={attachment.model_3d} title={lesson.title} /></div>
                 }
                 if (attachment.attachment_type === 'video' && attachment.video_url) {
-                  return <div className="lesson-attachment-video" key={attachment.id}><VideoTutorial tutorials={[{ id: attachment.id, title: lesson.title, description: lesson.description, video_url: attachment.video_url }]} instructorProfiles={instructorProfiles} compact videoOnly /></div>
+                  return <div className="lesson-attachment-video" key={attachment.id}><VideoTutorial tutorials={[{ id: attachment.id, title: lesson.title, description: lesson.content, video_url: attachment.video_url }]} instructorProfiles={instructorProfiles} compact videoOnly /></div>
                 }
                 return null
               })}

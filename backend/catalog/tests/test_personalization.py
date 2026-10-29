@@ -39,7 +39,26 @@ class PersonalizationAccessTests(TestCase):
 
         self.assertEqual(data['content'], '')
         self.assertEqual(data['video_url'], '')
-        self.assertEqual(data['photo'], None)
+        self.assertNotIn('photo', data)
+        self.assertEqual(data['attachments'], [])
+
+    def test_premium_lesson_content_is_hidden_from_free_users(self):
+        course = Course.objects.create(title='Beginner Madal Course')
+        lesson = Lesson.objects.create(
+            course=course,
+            title='Premium rhythm',
+            is_premium=True,
+            content='Private lesson notes',
+            video_url='https://example.com/private-video',
+        )
+        request = Request(APIRequestFactory().get('/lessons/'))
+        request.user = self.user
+        data = LessonSerializer(lesson, context={'request': request}).data
+
+        self.assertEqual(data['content'], '')
+        self.assertEqual(data['video_url'], '')
+        self.assertEqual(data['attachment_photo'], None)
+        self.assertEqual(data['attachment_3d_model'], None)
         self.assertEqual(data['attachments'], [])
 
     def test_public_lesson_response_contains_metadata_only(self):
@@ -47,7 +66,6 @@ class PersonalizationAccessTests(TestCase):
         lesson = Lesson.objects.create(
             course=course,
             title='Madal introduction',
-            description='Basic lesson description',
             content='Internal lesson content',
             video_url='https://example.com/video',
         )
@@ -55,7 +73,7 @@ class PersonalizationAccessTests(TestCase):
         data = LessonSerializer(lesson, context={'request': request}).data
 
         self.assertEqual(data['title'], lesson.title)
-        self.assertEqual(data['description'], lesson.description)
+        self.assertNotIn('description', data)
         self.assertNotIn('content', data)
         self.assertNotIn('video_url', data)
         self.assertNotIn('photo', data)

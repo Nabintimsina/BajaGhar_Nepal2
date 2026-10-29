@@ -16,7 +16,10 @@
   }
 
   const updateAttachmentFields = (form, select) => {
+    const isLessonForm = Boolean(form.querySelector('.field-attachment_video'))
     attachmentFields.forEach((fieldName) => {
+      if (fieldName === 'video_url' && isLessonForm) return
+
       const row = form.querySelector(`.field-${fieldName}`)
       if (row) {
         row.style.display = select.value === fieldAttachmentTypes[fieldName] ? '' : 'none'
