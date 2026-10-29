@@ -1,5 +1,9 @@
 .expert-edit-page { max-width: 900px; padding-top: var(--spacing-xl); padding-bottom: var(--spacing-2xl); }
-.expert-edit-back { display: inline-flex; align-items: center; gap: .45rem; color: var(--primary-maroon); font-weight: var(--fw-semibold); text-decoration: none; margin-bottom: var(--spacing-xl); }
+.expert-edit-back { display: inline-flex; align-items: center; gap: .55rem; width: fit-content; color: var(--primary-maroon); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); text-decoration: none; margin-top: 8px; margin-bottom: 10px; padding: .55rem .8rem .55rem .6rem; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: rgba(255, 255, 255, .72); box-shadow: 0 3px 10px var(--shadow-soft); transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); }
+.expert-edit-back svg { transition: transform var(--transition-fast); }
+.expert-edit-back:hover { color: var(--primary-maroon); border-color: var(--accent-gold); background: var(--tint-gold-soft); box-shadow: 0 6px 16px var(--shadow-soft); transform: translateX(-2px); }
+.expert-edit-back:hover svg { transform: translateX(-3px); }
+.expert-edit-back:focus-visible { outline: none; box-shadow: var(--focus-ring), 0 3px 10px var(--shadow-soft); }
 .expert-edit-heading { display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-xl); }
 .expert-edit-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: var(--tint-gold-soft); color: var(--primary-maroon); flex-shrink: 0; }
 .expert-edit-heading h1 { margin: .25rem 0; color: var(--primary-maroon); }

@@ -2,7 +2,7 @@
   background-color: var(--accent-dark-brown);
   color: var(--text-light);
   padding: var(--spacing-2xl) 0 0;
-  margin-top: 10px
+  /* margin-top: 10px */
 }
 
 .footer-content {

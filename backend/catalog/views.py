@@ -3,7 +3,7 @@ import mimetypes
 import os
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.http import FileResponse, Http404, HttpResponse
 from rest_framework import permissions, status, viewsets
@@ -457,7 +457,7 @@ class DashboardView(APIView):
         subscription, _ = Subscription.objects.get_or_create(user=user, defaults={'plan': 'FREE'})
         favorites = Favorite.objects.filter(user=user)[:6]
         recent = RecentlyViewed.objects.filter(user=user)[:6]
-        progress = LearningProgress.objects.filter(user=user)[:6]
+        progress = LearningProgress.objects.filter(user=user)
         achievements = UserAchievement.objects.filter(user=user).select_related('achievement')
 
         recent_items = []
@@ -478,12 +478,40 @@ class DashboardView(APIView):
         else:
             recommended_courses = Course.objects.filter(is_visible=True)[:3]
 
+        course_progress = []
+        progress_by_course = {}
+        for item in progress:
+            if item.course_id:
+                progress_by_course.setdefault(item.course_id, []).append(item)
+
+        started_courses = Course.objects.filter(
+            id__in=progress_by_course.keys(),
+        ).annotate(total_lessons=Count('lessons', distinct=True))
+        for course in started_courses:
+            records = progress_by_course.get(course.id, [])
+            completed_lessons = len({item.lesson_title for item in records if item.is_completed})
+            total_lessons = course.total_lessons
+            percentage = round((completed_lessons / total_lessons) * 100) if total_lessons else 0
+            course_progress.append({
+                'course': course.id,
+                'title': course.title,
+                'description': course.description,
+                'level': course.level,
+                'total_lessons': total_lessons,
+                'completed_lessons': completed_lessons,
+                'percentage': percentage,
+                'is_completed': bool(total_lessons and completed_lessons >= total_lessons),
+            })
+
+        course_progress.sort(key=lambda item: (-item['percentage'], item['title']))
+
         return Response({
             'user': UserSerializer(user).data,
             'subscription': SubscriptionSerializer(subscription).data,
             'favorites': FavoriteSerializer(favorites, many=True).data,
             'recently_viewed': recent_items,
             'progress': LearningProgressSerializer(progress, many=True).data,
+            'course_progress': course_progress,
             'achievements': UserAchievementSerializer(achievements, many=True).data,
             'recommended_courses': CourseSerializer(recommended_courses, many=True).data,
         })

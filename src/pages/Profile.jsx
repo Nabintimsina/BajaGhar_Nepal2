@@ -1,6 +1,6 @@
 import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { User, Mail, Zap } from 'lucide-react'
+import { ArrowRight, Edit3, Mail, User, Zap } from 'lucide-react'
 import './Profile.css'
 
 function Profile() {
@@ -17,13 +17,14 @@ function Profile() {
 
   return (
     <div className="profile-page">
-      <header className="profile-header page-header">
+      <header  id='profile-header' className="profile-header page-header">
         <div className="container">
           <div className="profile-header-content">
             <div className="profile-avatar-large">{profilePhoto ? <img src={profilePhoto} alt={`${user.first_name || user.username} profile`} /> : <User size={48} />}</div>
             <div>
               <h1>{user.first_name || user.username}</h1>
-              <p className="profile-subtitle">Member of BajaGhar Nepal community</p>
+              <p className="profile-subtitle">{isExpert ? 'Expert educator' : 'BajaGhar Nepal member'}</p>
+              <span className="profile-role-badge">{isExpert ? 'Expert account' : subscription?.is_premium ? 'Premium member' : 'Free member'}</span>
             </div>
           </div>
         </div>
@@ -34,7 +35,7 @@ function Profile() {
           <section className="detail-box profile-info-card">
             <div className="section-heading section-heading-tight">
               <span className="eyebrow">Account</span>
-              <h2>Your Information</h2>
+              <h2>Account details</h2>
             </div>
             <div className="profile-info-list">
               <div className="profile-info-item">
@@ -67,10 +68,9 @@ function Profile() {
               <h2>Navigate</h2>
             </div>
             <div className="profile-quick-links">
-              <Link to="/dashboard" className="profile-quick-link">Your Dashboard</Link>
-              {isExpert ? <><Link to="/expert-dashboard" className="profile-quick-link profile-expert-link">Expert course studio <span>Manage courses and lessons</span></Link><Link to="/profile/expert-details" className="profile-quick-link">Edit my details</Link></> : <Link to="/profile/edit" className="profile-quick-link">Edit my details <span>Update your name, email, and photo</span></Link>}
-              <Link to="/learn" className="profile-quick-link">Continue Learning</Link>
-              <Link to="/contact" className="profile-quick-link">Contact Us</Link>
+              {isExpert ? <><Link to="/expert-dashboard" className="profile-quick-link profile-expert-link"><span><strong>Course studio</strong><small>Manage courses and lessons</small></span><ArrowRight size={18} /></Link><Link to="/profile/expert-details" className="profile-quick-link"><span><strong>Edit my details</strong><small>Update your public profile</small></span><Edit3 size={17} /></Link></> : <Link to="/profile/edit" className="profile-quick-link"><span><strong>Edit my details</strong><small>Update your name, email, and photo</small></span><Edit3 size={17} /></Link>}
+              <Link to="/dashboard" className="profile-quick-link"><span><strong>Learning dashboard</strong><small>Track your course progress</small></span><ArrowRight size={18} /></Link>
+              <Link to="/learn" className="profile-quick-link"><span><strong>Browse courses</strong><small>Explore instruments and lessons</small></span><ArrowRight size={18} /></Link>
             </div>
           </section>
         </div>

@@ -86,14 +86,14 @@
   --font-devanagari: 'Noto Sans Devanagari', 'Mukta', 'Noto Serif Devanagari', serif;
   --font-devanagari-serif: 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif;
 
-  --fs-display: 40px;
-  --fs-h1: 40px;
-  --fs-h2: 30px;
-  --fs-h3: 22px;
-  --fs-h4: 1.25rem;
-  --fs-body-lg: 1.08rem;
-  --fs-body: 17px;
-  --fs-body-sm: 0.9rem;
+  --fs-display: 38px;
+  --fs-h1: 38px;
+  --fs-h2: 28px;
+  --fs-h3: 20px;
+  --fs-h4: 1.15rem;
+  --fs-body-lg: 1.03rem;
+  --fs-body: 16px;
+  --fs-body-sm: 0.875rem;
   --fs-caption: 0.85rem;
   --fs-eyebrow: 0.72rem;
   --fs-button: 15px;
@@ -278,6 +278,58 @@ a:hover {
   box-shadow: 0 12px 28px var(--shadow-soft);
 }
 
+/* Shared page rhythm and surface treatment. */
+.detail-box,
+.surface-panel {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  box-shadow: 0 8px 24px var(--shadow-soft);
+}
+
+.detail-box {
+  padding: var(--spacing-lg);
+}
+
+.section-heading {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-heading-tight {
+  margin-bottom: var(--spacing-md);
+}
+
+.section-heading h2,
+.section-heading h3 {
+  margin-top: .35rem;
+}
+
+.action-row,
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* Consistent breathing room between non-home page layout sections. */
+.course-main-grid,
+.lesson-main-grid,
+.dashboard-grid,
+.profile-grid,
+.course-studio-grid,
+.course-grid,
+.experts-grid,
+.objectives-grid,
+.tech-content,
+.developers-list,
+.contact-grid,
+.tuner-control-grid {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 main > .container,
 main > .profile-page,
 .page-section {
@@ -314,6 +366,7 @@ button:disabled,
   transition: transform var(--transition-medium), box-shadow var(--transition-medium), background-color var(--transition-medium), color var(--transition-medium), border-color var(--transition-medium);
   text-align: center;
   min-height: 2.75rem;
+  vertical-align: middle;
 }
 
 .btn-primary {
@@ -451,6 +504,12 @@ button:disabled,
 
   .btn {
     width: 100%;
+  }
+
+  .action-row,
+  .button-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

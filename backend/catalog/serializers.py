@@ -290,13 +290,25 @@ class LessonSerializer(serializers.ModelSerializer):
 
         has_premium_access = bool(user and user.is_authenticated)
 
+        is_content_manager = bool(
+            user
+            and user.is_authenticated
+            and (
+                user.is_staff
+                or (
+                    instance.course.reference_expert_id
+                    and instance.course.reference_expert.user_id == user.id
+                )
+            )
+        )
+
         if has_premium_access:
             subscription = getattr(user, 'subscription', None)
             has_premium_access = bool(subscription and subscription.is_premium())
 
         is_premium_content = instance.is_premium or bool(instance.course_id and instance.course.is_premium)
 
-        if is_premium_content and not has_premium_access:
+        if is_premium_content and not has_premium_access and not is_content_manager:
             data['content'] = ''
             data['video_url'] = ''
             data['photo'] = None

@@ -80,7 +80,7 @@
 
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
 }
@@ -128,6 +128,71 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-lg);
+}
+
+.course-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+.dashboard-card .course-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  min-width: 0;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--secondary-beige);
+  box-shadow: none;
+}
+
+.course-progress-card .mini-card-header {
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.course-progress-card .mini-card-header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-progress-card .mini-card-header span {
+  flex-shrink: 0;
+  color: var(--primary-maroon);
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: var(--fw-bold);
+}
+
+.course-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+}
+
+.course-progress-meta .dashboard-action {
+  flex-shrink: 0;
+}
+
+.dashboard-empty {
+  display: grid;
+  place-items: center;
+  gap: .65rem;
+  padding: var(--spacing-lg);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.dashboard-empty p {
+  margin: 0;
 }
 
 .dashboard-card {
@@ -358,7 +423,8 @@
   }
 
   .dashboard-grid,
-  .dashboard-stats {
+  .dashboard-stats,
+  .course-progress-grid {
     grid-template-columns: 1fr;
   }
 

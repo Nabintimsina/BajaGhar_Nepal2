@@ -12,8 +12,8 @@
   align-items: center;
   gap: 0.55rem;
   width: fit-content;
-  margin-top: var(--spacing-sm);
-  margin-bottom: var(--spacing-xl);
+  margin-top: 8px;
+  margin-bottom: 10px;
   padding: 0.55rem 0.8rem 0.55rem 0.6rem;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);

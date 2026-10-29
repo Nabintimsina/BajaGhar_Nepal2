@@ -1,25 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, LockKeyhole } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, LockKeyhole } from 'lucide-react'
 import VideoTutorial from '../components/VideoTutorial'
 import Viewer3D from '../components/Viewer3D'
 import { api } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import './LessonDetail.css'
-
-function LessonContent({ content }) {
-  return (
-    <div className="lesson-text-content">
-      {content.split('\n').map((line, index) => {
-        const trimmedLine = line.trim()
-        if (!trimmedLine) return <div className="lesson-text-space" key={`${index}-space`} />
-        if (trimmedLine.startsWith('## ')) return <h3 key={index}>{trimmedLine.slice(3)}</h3>
-        if (trimmedLine.startsWith('- ')) return <li key={index}>{trimmedLine.slice(2)}</li>
-        return <p key={index}>{trimmedLine}</p>
-      })}
-    </div>
-  )
-}
 
 function LessonDetail() {
   const { courseId, lessonId } = useParams()
@@ -119,18 +105,19 @@ function LessonDetail() {
   const attachments = lesson.attachments || []
 
   const handleCompleteLesson = async () => {
-    if (isCompleted || isCompleting) return
+    if (isCompleting) return
 
     setIsCompleting(true)
     setProgressError('')
+    const nextCompletedState = !isCompleted
     try {
       await api.post('auth/progress/', {
         course: courseId,
         lesson_title: lesson.title,
-        completion_percentage: 100,
-        is_completed: true,
+        completion_percentage: nextCompletedState ? 100 : 0,
+        is_completed: nextCompletedState,
       })
-      setIsCompleted(true)
+      setIsCompleted(nextCompletedState)
     } catch (err) {
       setProgressError(err.message || 'Unable to save your progress.')
     } finally {
@@ -173,10 +160,14 @@ function LessonDetail() {
             </div>}
             {isPremium ? (
               <div className="lesson-locked"><LockKeyhole size={22} /><h2>Premium lesson</h2><p>This lesson is available to Premium members.</p><Link to="/contact" state={{ subject: `Premium access: ${course.title}` }} className="btn btn-secondary">Contact us to subscribe</Link></div>
-            ) : matchingTutorial.length > 0 ? <VideoTutorial tutorials={matchingTutorial} instructorProfiles={instructorProfiles} compact videoOnly /> : lesson.content ? <LessonContent content={lesson.content} /> : <div className="lesson-empty"><BookOpen size={22} /><p>Lesson content will be published here from the Django course editor.</p></div>}
+            ) : matchingTutorial.length > 0 ? <VideoTutorial tutorials={matchingTutorial} instructorProfiles={instructorProfiles} compact videoOnly /> : null}
             {!isPremium && <div className="lesson-completion">
-              <button type="button" className="btn btn-primary" onClick={handleCompleteLesson} disabled={isCompleted || isCompleting}>
-                <CheckCircle2 size={17} /> {isCompleted ? 'Lesson completed' : isCompleting ? 'Saving progress...' : 'Mark lesson complete'}
+              <button type="button" className="btn btn-primary lesson-completion-button" onClick={handleCompleteLesson} disabled={isCompleting} aria-busy={isCompleting}>
+                <CheckCircle2 size={17} />
+                <span className="lesson-completion-labels" aria-live="polite">
+                  <span className={isCompleted ? 'visible' : ''}>Mark lesson incomplete</span>
+                  <span className={!isCompleted ? 'visible' : ''}>Mark lesson complete</span>
+                </span>
               </button>
               {progressError && <p role="alert">{progressError}</p>}
             </div>}
