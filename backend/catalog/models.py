@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
 
 User = get_user_model()
@@ -26,6 +27,15 @@ class ExpertUser(User):
         proxy = True
         verbose_name = 'Expert user'
         verbose_name_plural = 'Expert users'
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_profile')
+    photo = models.ImageField(upload_to='users/photos/', blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.user.username} profile'
 
 
 class Category(models.Model):
@@ -301,6 +311,17 @@ class Course(models.Model):
 
     class Meta:
         ordering = ['order', 'title']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or 'course'
+            candidate = base_slug
+            suffix = 2
+            while Course.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                candidate = f'{base_slug}-{suffix}'
+                suffix += 1
+            self.slug = candidate
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

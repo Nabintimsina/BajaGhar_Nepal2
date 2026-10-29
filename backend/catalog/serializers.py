@@ -15,6 +15,7 @@ from .models import (
     TunerConfiguration,
     Branding,
     UserAchievement,
+    UserProfile,
 )
 
 
@@ -102,11 +103,16 @@ class ExpertDetailSerializer(LanguageAwareModelSerializer):
         fields = [
             'id',
             'name',
+            'name_ne',
             'expertise',
+            'expertise_ne',
             'photo',
             'bio',
+            'bio_ne',
             'detailed_bio',
+            'detailed_bio_ne',
             'achievements',
+            'achievements_ne',
             'contact_email',
         ]
         extra_kwargs = {
@@ -114,6 +120,17 @@ class ExpertDetailSerializer(LanguageAwareModelSerializer):
             'detailed_bio': {'required': False, 'allow_blank': True},
             'achievements': {'required': False},
         }
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if instance.user_id:
+            user = instance.user
+            name_parts = instance.name.strip().split(None, 1)
+            user.first_name = name_parts[0] if name_parts else ''
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+            user.email = instance.contact_email
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+        return instance
 
 
 class ContactSerializer(serializers.ModelSerializer):
@@ -124,9 +141,32 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    photo = serializers.SerializerMethodField()
+    photo_upload = serializers.ImageField(write_only=True, required=False, allow_null=True)
+
+    def get_photo(self, obj):
+        profile = getattr(obj, 'user_profile', None)
+        if not profile or not profile.photo:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(profile.photo.url) if request else profile.photo.url
+
+    def update(self, instance, validated_data):
+        photo = validated_data.pop('photo_upload', serializers.empty)
+        instance = super().update(instance, validated_data)
+        if photo is not serializers.empty:
+            profile, _ = UserProfile.objects.get_or_create(user=instance)
+            if photo is None and profile.photo:
+                profile.photo.delete(save=False)
+                profile.photo = None
+            elif photo is not None:
+                profile.photo = photo
+            profile.save()
+        return instance
+
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'photo', 'photo_upload']
         read_only_fields = ['id']
 
 
@@ -142,6 +182,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    lessons_count = serializers.IntegerField(source='lessons.count', read_only=True)
     reference_expert = ExpertPreviewSerializer(read_only=True)
     instrument_name = serializers.CharField(source='instrument.name', read_only=True, allow_null=True)
     instrument_image = serializers.ImageField(source='instrument.primary_image', read_only=True, allow_null=True)
@@ -154,7 +195,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'estimated_duration_minutes', 'what_you_will_learn',
             'target_audience', 'requirements', 'instrument',
             'instrument_name', 'instrument_image', 'instrument_is_featured',
-            'reference_expert', 'is_premium', 'order', 'is_visible',
+            'reference_expert', 'is_premium', 'order', 'is_visible', 'lessons_count',
         ]
 
     def validate(self, attrs):
@@ -196,18 +237,41 @@ class LessonAttachmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'lesson', 'attachment_type', 'photo', 'video_url', 'model_3d', 'order']
 
 
-class LessonSerializer(serializers.ModelSerializer):
-    attachments = LessonAttachmentSerializer(many=True, read_only=True)
-    attachment_3d_model = serializers.SerializerMethodField()
-
-    def get_attachment_3d_model(self, obj):
-        if not obj.attachment_3d_model:
+class ProtectedLessonModelField(serializers.FileField):
+    def to_representation(self, value):
+        if not value:
             return None
         request = self.context.get('request')
         if request is not None:
             from django.urls import reverse
-            return request.build_absolute_uri(reverse('protected-lesson-model', args=[obj.pk]))
-        return obj.attachment_3d_model.url
+            instance = getattr(self.parent, 'instance', None)
+            lesson_id = getattr(instance, 'pk', None)
+            if lesson_id:
+                return request.build_absolute_uri(reverse('protected-lesson-model', args=[lesson_id]))
+        return value.url
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    attachments = LessonAttachmentSerializer(many=True, read_only=True)
+    attachment_3d_model = ProtectedLessonModelField(required=False, allow_null=True)
+    remove_photo = serializers.BooleanField(write_only=True, required=False, default=False)
+    remove_attachment_3d_model = serializers.BooleanField(write_only=True, required=False, default=False)
+
+    def create(self, validated_data):
+        validated_data.pop('remove_photo', False)
+        validated_data.pop('remove_attachment_3d_model', False)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        remove_photo = validated_data.pop('remove_photo', False)
+        remove_model = validated_data.pop('remove_attachment_3d_model', False)
+        if remove_photo and 'photo' not in validated_data and instance.photo:
+            instance.photo.delete(save=False)
+            instance.photo = None
+        if remove_model and 'attachment_3d_model' not in validated_data and instance.attachment_3d_model:
+            instance.attachment_3d_model.delete(save=False)
+            instance.attachment_3d_model = None
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -250,6 +314,7 @@ class LessonSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'photo', 'attachment_type',
             'attachment_photo', 'attachment_video', 'attachment_3d_model',
             'attachments', 'course', 'order', 'is_premium', 'duration_minutes', 'video_url', 'content',
+            'remove_photo', 'remove_attachment_3d_model',
         ]
 
 

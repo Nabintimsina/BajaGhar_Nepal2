@@ -1,3 +1,53 @@
+.expert-profile-edit-card {
+  margin-bottom: var(--spacing-lg);
+}
+
+.expert-profile-edit-form {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.expert-profile-edit-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--primary-maroon);
+  font-weight: var(--fw-semibold);
+}
+
+.expert-profile-edit-form input,
+.expert-profile-edit-form textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--secondary-light);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.expert-profile-edit-form textarea {
+  resize: vertical;
+}
+
+.profile-field-help {
+  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+}
+
+.expert-profile-photo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-gold);
+}
+
+.expert-profile-edit-message {
+  margin: 0;
+  color: var(--primary-maroon);
+  font-weight: var(--fw-semibold);
+}
 .profile-page {
   min-height: 100vh;
   padding-bottom: var(--spacing-2xl);
@@ -34,8 +84,9 @@
 
 .profile-avatar-large {
   font-size: 3rem;
-  min-width: 60px;
-  height: 60px;
+  width: 112px;
+  min-width: 112px;
+  height: 112px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,11 +100,13 @@
   width: 48px;
   height: 48px;
 }
+.profile-avatar-large img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 
 @media (max-width: 768px) {
   .profile-avatar-large {
-    min-width: 50px;
-    height: 50px;
+    width: 92px;
+    min-width: 92px;
+    height: 92px;
   }
 
   .profile-avatar-large svg {
@@ -145,6 +198,8 @@
 .profile-quick-link:active {
   transform: translateX(2px);
 }
+.profile-expert-link { background: var(--tint-gold-soft); border-left-color: var(--accent-gold); color: var(--primary-maroon); }
+.profile-expert-link span { display: block; margin-top: .25rem; color: var(--text-secondary); font-size: var(--fs-caption); font-weight: var(--fw-regular); }
 
 @media (max-width: 1024px) {
   .profile-grid {

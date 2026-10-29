@@ -14,7 +14,7 @@ function Navbar() {
   const { branding } = useBranding()
   const { t } = useTranslation()
   const location = useLocation()
-  const { isAuthenticated, logout, user } = useAuth()
+  const { isAuthenticated, logout, user, isExpert } = useAuth()
 
   const isActive = (path) => {
     return location.pathname === path ? "active" : ""
@@ -84,6 +84,7 @@ function Navbar() {
             ) : (
               <div className="mobile-auth-links">
                 <Link to="/dashboard" onClick={closeMenu}>My BajaGhar</Link>
+                {isExpert && <Link to="/expert-dashboard" onClick={closeMenu}>Expert workspace</Link>}
                 <Link to="/profile" onClick={closeMenu}>Profile</Link>
                 <button type="button" className="nav-logout" onClick={handleLogout}><LogOut size={16} /> Logout</button>
               </div>
@@ -112,6 +113,11 @@ function Navbar() {
                   <Link to="/dashboard" className="profile-menu-item" onClick={closeProfileMenu}>
                     My BajaGhar
                   </Link>
+                  {isExpert && (
+                    <Link to="/expert-dashboard" className="profile-menu-item" onClick={closeProfileMenu}>
+                      Expert workspace
+                    </Link>
+                  )}
                   <Link to="/profile" className="profile-menu-item" onClick={closeProfileMenu}>
                     Profile
                   </Link>

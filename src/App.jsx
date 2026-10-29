@@ -14,7 +14,11 @@ import Contact from './pages/Contact'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import ExpertProfileEdit from './pages/ExpertProfileEdit'
+import UserProfileEdit from './pages/UserProfileEdit'
 import CreateCourse from './pages/CreateCourse'
+import ExpertDashboard from './pages/ExpertDashboard'
+import LessonEditor from './pages/LessonEditor'
 import ErrorPage from './pages/ErrorPage'
 import { BrandingProvider } from './context/BrandingContext'
 import { AuthProvider } from './context/AuthContext'
@@ -45,11 +49,17 @@ function App() {
                 <Route path="/tuner" element={<TunerLab />} />
                 <Route path="/experts" element={<Experts />} />
                 <Route path="/experts/:id" element={<ExpertDetail />} />
-                                <Route path="/experts/:id/courses/new" element={<CreateCourse />} />
+                <Route path="/expert-dashboard" element={<ExpertDashboard />} />
+                <Route path="/expert-dashboard/courses/new" element={<CreateCourse />} />
+                <Route path="/expert-dashboard/courses/:id/edit" element={<CreateCourse />} />
+                <Route path="/expert-dashboard/courses/:courseId/lessons/new" element={<LessonEditor />} />
+                <Route path="/expert-dashboard/courses/:courseId/lessons/:lessonId/edit" element={<LessonEditor />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/expert-details" element={<ExpertProfileEdit />} />
+                <Route path="/profile/edit" element={<UserProfileEdit />} />
                 <Route path="*" element={<ErrorPage />} />
               </Routes>
             </main>

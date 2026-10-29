@@ -7,10 +7,12 @@ from django.db.models import Q
 from django.utils import timezone
 from django.http import FileResponse, Http404, HttpResponse
 from rest_framework import permissions, status, viewsets
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from .models import (
@@ -51,7 +53,7 @@ from .serializers import (
     get_localized_value,
     get_requested_language,
 )
-from .permissions import IsAdminOrReadOnly, IsExpertOrStaff
+from .permissions import IsAdminOrReadOnly, IsCourseExpertOrStaff, IsExpertOrStaff, IsExpertProfileOwnerOrStaff
 
 
 def _serve_model_file(request, file_field, allowed):
@@ -109,9 +111,14 @@ class ExpertViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'expertise']
 
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action in ('retrieve', 'update', 'partial_update'):
             return ExpertDetailSerializer
         return ExpertListSerializer
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [AllowAny()]
+        return [IsExpertProfileOwnerOrStaff()]
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -270,18 +277,25 @@ class RegisterView(APIView):
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
         user = request.user
         subscription, _ = Subscription.objects.get_or_create(user=user, defaults={'plan': 'FREE'})
         expert = getattr(user, 'expert_profile', None)
         return Response({
-            'user': UserSerializer(user).data,
+            'user': UserSerializer(user, context={'request': request}).data,
             'subscription': SubscriptionSerializer(subscription).data,
-            'expert': ExpertPreviewSerializer(expert).data if expert else None,
+            'expert': ExpertDetailSerializer(expert, context={'request': request}).data if expert else None,
             'is_expert': expert is not None,
             'is_authenticated': True,
         })
+
+    def patch(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'user': UserSerializer(request.user, context={'request': request}).data})
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -377,6 +391,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if self.request.query_params.get('mine') == '1':
+            if user.is_authenticated and user.is_staff:
+                return self.queryset
+            if user.is_authenticated and hasattr(user, 'expert_profile'):
+                return self.queryset.filter(reference_expert__user=user)
+            return self.queryset.none()
         if user.is_authenticated and user.is_staff:
             return self.queryset
         if user.is_authenticated and hasattr(user, 'expert_profile'):
@@ -402,14 +422,31 @@ class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.select_related('course').prefetch_related('attachments').all()
     serializer_class = LessonSerializer
     permission_classes = [AllowAny]
-    http_method_names = ['get', 'head', 'options']
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        queryset = self.queryset.filter(course__is_visible=True)
+        user = self.request.user
+        if user.is_authenticated and user.is_staff:
+            queryset = self.queryset
+        elif user.is_authenticated and hasattr(user, 'expert_profile'):
+            queryset = self.queryset.filter(Q(course__is_visible=True) | Q(course__reference_expert__user=user)).distinct()
+        else:
+            queryset = self.queryset.filter(course__is_visible=True)
         course_id = self.request.query_params.get('course')
         if course_id:
             queryset = queryset.filter(course_id=course_id)
         return queryset
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [AllowAny()]
+        return [IsCourseExpertOrStaff()]
+
+    def perform_create(self, serializer):
+        course = serializer.validated_data['course']
+        if not self.request.user.is_staff and course.reference_expert.user_id != self.request.user.id:
+            raise PermissionDenied('You can only add lessons to your own courses.')
+        serializer.save()
 
 
 class DashboardView(APIView):

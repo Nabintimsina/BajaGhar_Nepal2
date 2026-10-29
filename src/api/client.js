@@ -163,9 +163,10 @@ const request = async (path, options = {}) => {
   const { params, body, headers, method = 'GET' } = options
   const url = buildUrl(path, params)
   let authToken = getAuthToken()
+  const isFormData = body instanceof FormData
 
   const requestHeaders = {
-    ...(body ? { 'Content-Type': 'application/json' } : {}),
+    ...(body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     ...headers
   }
@@ -173,7 +174,7 @@ const request = async (path, options = {}) => {
   let response = await fetch(url, {
     method,
     headers: requestHeaders,
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
   })
 
   // If 401 Unauthorized, try to refresh token and retry
@@ -183,7 +184,7 @@ const request = async (path, options = {}) => {
     if (newToken) {
       // Retry request with new token
       const retryHeaders = {
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
         Authorization: `Bearer ${newToken}`,
         ...headers
       }
@@ -191,7 +192,7 @@ const request = async (path, options = {}) => {
       response = await fetch(url, {
         method,
         headers: retryHeaders,
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
       })
     } else if (method === 'GET') {
       // Public reads should still work when an old login token is left in storage.

@@ -1,0 +1,28 @@
+.expert-dashboard-page { padding-top: var(--spacing-2xl); padding-bottom: var(--spacing-2xl); max-width: 1180px; }
+.expert-dashboard-header { display: flex; justify-content: space-between; align-items: end; gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
+.expert-dashboard-header h1 { margin: .35rem 0; color: var(--primary-maroon); }
+.expert-dashboard-header p { color: var(--text-secondary); margin: 0; }
+.expert-dashboard-actions { display: flex; align-items: center; gap: .75rem; }
+.icon-button { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: white; color: var(--primary-maroon); cursor: pointer; }
+.expert-dashboard-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--border-soft); background: var(--border-soft); margin-bottom: var(--spacing-xl); }
+.expert-dashboard-stats div { padding: 1.15rem; background: var(--secondary-light); display: grid; gap: .25rem; }
+.expert-dashboard-stats strong { font-size: 1.8rem; color: var(--primary-maroon); }
+.expert-dashboard-stats span, .studio-course-meta { color: var(--text-secondary); font-size: .9rem; }
+.course-filter { display: flex; gap: .3rem; border-bottom: 1px solid var(--border-soft); margin-bottom: var(--spacing-xl); }
+.course-filter button { border: 0; background: transparent; padding: .8rem 1rem; color: var(--text-secondary); cursor: pointer; font: inherit; font-weight: var(--fw-semibold); border-bottom: 3px solid transparent; }
+.course-filter button.active { color: var(--primary-maroon); border-color: var(--accent-gold); }
+.course-studio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg); }
+.studio-course-card { display: flex; flex-direction: column; min-height: 250px; padding: var(--spacing-lg); border: 1px solid var(--border-soft); border-top: 4px solid var(--accent-gold); border-radius: var(--radius-lg); background: var(--secondary-light); box-shadow: var(--shadow-card); transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
+.studio-course-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.studio-course-card-top, .studio-course-meta { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+.studio-course-card h2 { margin: 1rem 0 .45rem; color: var(--primary-maroon); font-size: 1.3rem; }
+.studio-course-card p { color: var(--text-secondary); line-height: 1.55; margin: 0 0 1rem; }
+.course-status { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: var(--fw-semibold); }
+.course-status.published { color: #26734d; }.course-status.draft { color: #976b16; }
+.studio-course-meta { margin-top: auto; padding: .9rem 0; border-top: 1px solid var(--border-soft); }.studio-course-meta span { display: inline-flex; align-items: center; gap: .3rem; }
+.studio-edit-link { align-self: flex-start; margin-top: .7rem; }.expert-dashboard-empty, .expert-dashboard-state { padding: var(--spacing-2xl) var(--spacing-md); text-align: center; color: var(--text-secondary); }.expert-dashboard-empty h2 { color: var(--primary-maroon); }.expert-dashboard-empty svg { color: var(--accent-gold); }
+.expert-feedback { display: flex; align-items: center; gap: .55rem; margin: 0 0 var(--spacing-lg); padding: .8rem 1rem; border: 1px solid; border-radius: var(--radius-md); font-weight: var(--fw-semibold); }
+.expert-feedback.success { border-color: #9ac9ac; background: #edf8f0; color: #236640; }
+.expert-feedback.error { border-color: #e4a6a6; background: #fff1f1; color: var(--primary-deep-red); }
+@media (max-width: 800px) { .expert-dashboard-header { align-items: start; flex-direction: column; }.course-studio-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .course-studio-grid, .expert-dashboard-stats { grid-template-columns: 1fr; }.expert-dashboard-actions { width: 100%; }.expert-dashboard-actions .btn { flex: 1; justify-content: center; }.course-filter { overflow-x: auto; } }

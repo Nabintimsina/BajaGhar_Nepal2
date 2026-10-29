@@ -82,7 +82,7 @@
 
   /* Typography */
   --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-heading: 'Bricolage Grotesque','Playfair Display', Georgia, serif;
+  --font-heading: 'Playfair Display', Georgia, serif;
   --font-devanagari: 'Noto Sans Devanagari', 'Mukta', 'Noto Serif Devanagari', serif;
   --font-devanagari-serif: 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif;
 
@@ -231,19 +231,19 @@ a:hover {
 .container {
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 clamp(1rem, 3vw, 2rem);
 }
 
 .container-wide {
   max-width: var(--container-width-wide);
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 clamp(1rem, 3vw, 2rem);
 }
 
 .page-header {
   background: linear-gradient(135deg, var(--primary-maroon) 0%, var(--primary-deep-red) 100%);
   color: var(--text-light);
-  padding: var(--spacing-2xl) 0;
+  padding: clamp(3rem, 8vw, 5rem) 0;
   text-align: center;
   border-bottom: 1px solid var(--overlay-white);
 }
@@ -278,8 +278,28 @@ a:hover {
   box-shadow: 0 12px 28px var(--shadow-soft);
 }
 
+main > .container,
+main > .profile-page,
+.page-section {
+  min-width: 0;
+}
+
+input,
+textarea,
+select {
+  min-height: 2.75rem;
+}
+
+button:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+  box-shadow: none;
+}
+
 .section-shell {
-  padding: var(--spacing-xl) 0;
+  padding: clamp(2.5rem, 6vw, 4rem) 0;
 }
 
 /* Button Styles */
@@ -293,6 +313,7 @@ a:hover {
   cursor: pointer;
   transition: transform var(--transition-medium), box-shadow var(--transition-medium), background-color var(--transition-medium), color var(--transition-medium), border-color var(--transition-medium);
   text-align: center;
+  min-height: 2.75rem;
 }
 
 .btn-primary {
@@ -339,6 +360,7 @@ a:hover {
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 8px var(--shadow-base);
   overflow: hidden;
+  border: 1px solid var(--border-soft);
   transition: transform var(--transition-medium), box-shadow var(--transition-medium), border-color var(--transition-medium);
 }
 
@@ -349,7 +371,7 @@ a:hover {
 
 /* Section Styles */
 .section {
-  padding: var(--spacing-2xl) 0;
+  padding: clamp(3.5rem, 8vw, 5.5rem) 0;
 }
 
 .section-title {
@@ -419,6 +441,16 @@ a:hover {
   
   h2 {
     font-size: calc(var(--fs-h2) * 0.8);
+  }
+
+  .container,
+  .container-wide {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .btn {
+    width: 100%;
   }
 }
 

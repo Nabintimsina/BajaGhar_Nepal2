@@ -21,3 +21,24 @@ class IsExpertOrStaff(permissions.BasePermission):
             request.user.is_staff
             or (getattr(obj, 'reference_expert', None) and obj.reference_expert.user_id == request.user.id)
         )
+
+
+class IsCourseExpertOrStaff(IsExpertOrStaff):
+    def has_object_permission(self, request, view, obj):
+        course = getattr(obj, 'course', None)
+        return bool(
+            request.user.is_staff
+            or (course and course.reference_expert and course.reference_expert.user_id == request.user.id)
+        )
+
+
+class IsExpertProfileOwnerOrStaff(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_staff or hasattr(request.user, 'expert_profile'))
+        )
+
+    def has_object_permission(self, request, view, obj):
+        return bool(request.user.is_staff or obj.user_id == request.user.id)

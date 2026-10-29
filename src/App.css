@@ -8,6 +8,7 @@
 .main-content {
   flex: 1;
   margin-top: 70px; /* Height of fixed navbar */
+  overflow: clip;
 }
 
 /* Ensure UI elements use the chosen system font and button sizing */
@@ -19,6 +20,14 @@ button, .btn {
   font-size: var(--fs-button);
   font-weight: var(--fw-button);
   line-height: 1.2;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 /* Nepali / Devanagari text helper */

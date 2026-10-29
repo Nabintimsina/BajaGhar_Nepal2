@@ -4,7 +4,8 @@ import { User, Mail, Zap } from 'lucide-react'
 import './Profile.css'
 
 function Profile() {
-  const { user, isAuthenticated, loading, subscription } = useAuth()
+  const { user, expert, isAuthenticated, isExpert, loading, subscription } = useAuth()
+  const profilePhoto = expert?.photo || user?.photo
 
   if (loading) {
     return <div className="container py-5"><p>Loading profile…</p></div>
@@ -19,7 +20,7 @@ function Profile() {
       <header className="profile-header page-header">
         <div className="container">
           <div className="profile-header-content">
-            <div className="profile-avatar-large"><User size={48} /></div>
+            <div className="profile-avatar-large">{profilePhoto ? <img src={profilePhoto} alt={`${user.first_name || user.username} profile`} /> : <User size={48} />}</div>
             <div>
               <h1>{user.first_name || user.username}</h1>
               <p className="profile-subtitle">Member of BajaGhar Nepal community</p>
@@ -67,6 +68,7 @@ function Profile() {
             </div>
             <div className="profile-quick-links">
               <Link to="/dashboard" className="profile-quick-link">Your Dashboard</Link>
+              {isExpert ? <><Link to="/expert-dashboard" className="profile-quick-link profile-expert-link">Expert course studio <span>Manage courses and lessons</span></Link><Link to="/profile/expert-details" className="profile-quick-link">Edit my details</Link></> : <Link to="/profile/edit" className="profile-quick-link">Edit my details <span>Update your name, email, and photo</span></Link>}
               <Link to="/learn" className="profile-quick-link">Continue Learning</Link>
               <Link to="/contact" className="profile-quick-link">Contact Us</Link>
             </div>

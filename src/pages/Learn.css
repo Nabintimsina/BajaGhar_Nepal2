@@ -4,7 +4,7 @@
 }
 
 .learn-content.container {
-  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-2xl);
+  padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem) var(--spacing-2xl);
 }
 
 .learn-sidebar {
@@ -136,6 +136,10 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-md);
+}
+
+.course-grid > * {
+  min-width: 0;
 }
 
 .course-card {

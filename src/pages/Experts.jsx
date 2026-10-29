@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ExpertCard from '../components/ExpertCard'
 import { api } from '../api/client'
+import { useAuth } from '../context/AuthContext'
 import './Experts.css'
 
 function Experts() {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const activeLanguage = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase().startsWith('ne') ? 'ne' : 'en'
+  const { isExpert } = useAuth()
   const [experts, setExperts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -64,7 +66,7 @@ function Experts() {
       <section className="section experts-section">
         <div className="container">
           <div className="experts-intro">
-              <p>{t('experts.intro')}</p>
+            <p>{t('experts.intro')}</p>
           </div>
 
           {isLoading ? (
@@ -105,9 +107,16 @@ function Experts() {
                 <p>{t('experts.preserveTraditionsDesc')}</p>
               </div>
             </div>
-            <button className="btn btn-primary btn-large" onClick={handleApplyExpert}>
-              {t('experts.joinUs')}
-            </button>
+            <div className="expert-actions">
+              <button className="btn btn-primary btn-large" onClick={handleApplyExpert}>
+                {t('experts.joinUs')}
+              </button>
+              {isExpert ? (
+                <button className="btn btn-secondary btn-large" type="button" onClick={() => navigate('/expert-dashboard')}>Logged in as expert</button>
+              ) : (
+                <button className="btn btn-secondary btn-large" type="button" onClick={() => navigate('/login', { state: { returnTo: '/experts' } })}>Login as expert</button>
+              )}
+            </div>
           </div>
         </div>
       </section>

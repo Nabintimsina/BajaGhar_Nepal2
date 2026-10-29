@@ -1,5 +1,24 @@
 .expert-detail-page {
-  padding-top: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+}
+
+.expert-detail-page > .container:first-child {
+  padding-bottom: var(--spacing-lg);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  color: var(--primary-maroon);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent-bronze);
 }
 
 /* Expert Profile Header */
