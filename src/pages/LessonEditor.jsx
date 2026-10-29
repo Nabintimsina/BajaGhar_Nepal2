@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import './CreateCourse.css'
 
 const blankLesson = { title: '', content: '', video_url: '', duration_minutes: 0, order: 1, is_premium: false }
+const MAX_MODEL_SIZE = 100 * 1024 * 1024
 
 function LessonEditor() {
   const navigate = useNavigate()
@@ -53,6 +54,10 @@ function LessonEditor() {
     setError('')
     setSuccess('')
     try {
+      if (model3d && model3d.size > MAX_MODEL_SIZE) {
+        throw new Error('The 3D model must be smaller than 100 MB.')
+      }
+
       const payload = new FormData()
       Object.entries({ ...form, course: courseId, duration_minutes: Number(form.duration_minutes) || 0, order: Number(form.order) || 1 }).forEach(([key, value]) => payload.append(key, value))
       payload.append('remove_attachment_3d_model', String(removeModel3d && !model3d))

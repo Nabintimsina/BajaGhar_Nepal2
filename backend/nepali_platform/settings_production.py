@@ -17,3 +17,7 @@ MEDIA_URL = '/api/media/'
 MEDIA_ROOT = Path('/home2/bajanepa/public_html/api/media')
 MEDIA_SYMLINK_PATH = '/home2/bajanepa/public_html/api/media'
 MEDIA_TARGET_PATH = '/home2/bajanepa/bajanepal/backend/media'
+
+# Keep this aligned with the API request limit in public/.htaccess.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024

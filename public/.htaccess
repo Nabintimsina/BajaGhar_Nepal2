@@ -33,3 +33,6 @@
   # Rewrite everything else to index.html for React Router
   RewriteRule ^ index.html [QSA,L]
 </IfModule>
+
+# Allow lesson photo and 3D model uploads up to 100 MB.
+LimitRequestBody 104857600
